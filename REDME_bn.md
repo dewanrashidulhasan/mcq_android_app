@@ -20,6 +20,13 @@
 - SQLite দিয়ে local database রাখা হয়েছে।
 - Password plaintext রাখা হয়নি, `bcrypt` hash করা হয়েছে।
 - Admin ও Student আলাদা role অনুযায়ী screen পায়।
+- Admin panel থেকে সব registered student-এর username দেখা যায়।
+- Admin panel থেকে নতুন subject save করলে সেটা auto-select হয়।
+- Admin panel-এর **Select Subject + Load MCQs** card থেকে যেকোনো subject select/load করা যায়।
+- Loaded subject-এর under-এ একই জায়গায় multiple MCQ যোগ করা যায়, plus button দিয়ে নতুন MCQ draft নেওয়া যায়।
+- সব question ও option add করার পর একবার Save All MCQs চাপলেই selected subject-এর under-এ একসাথে save হয়।
+- Admin panel থেকে subject-wise exam report দেখা যায়, অর্থাৎ কোন user কত mark পেয়েছে।
+- Admin panel থেকে subject-wise question bank দেখে ভুল question delete করা যায়।
 - Exam result `exam_results` table-এ save হয়।
 
 ### Input
@@ -53,6 +60,13 @@
 - Password bcrypt hash করে save করতে হবে।
 - `admin` এবং `student` role আলাদা রাখতে হবে।
 - Student answer submit করলে score calculate ও database save করতে হবে।
+- Admin panel-এ subject-wise username + marks report দেখাতে হবে।
+- Admin যেন সব student username দেখতে পারে।
+- Admin যেন নতুন subject add করার পর সেটা select/load করতে পারে।
+- Admin যেন Select Subject + Load MCQs card দিয়ে subject change/load করতে পারে।
+- Admin যেন loaded subject-এর under-এ multiple MCQ এক জায়গায় add করে শেষে একবারে save করতে পারে।
+- Admin যেন existing specific MCQ delete করতে পারে।
+- Admin panel-এ Android Back চাপলে app direct close না হয়ে login screen-এ যায়।
 
 ### ❌ এখন না করলেও চলবে
 
@@ -174,7 +188,7 @@ mcq_android_app/
 | Screen | UI improvement |
 |---|---|
 | Login | Gradient background, dark hero card, vector picture section, rounded login/register buttons। |
-| Admin | Dashboard hero, subject/question statistics, separate card for subject ও MCQ form। |
+| Admin | Dashboard hero, subject/question/student statistics, student username list, bulk MCQ builder, subject-wise result report, delete question bank। |
 | Student | Welcome hero, available subjects count, exam start card। |
 | Exam | প্রতিটি question আলাদা rounded card, option গুলো soft radio-button blocks। |
 | Result | Big percentage card, total/correct stats, performance message। |
@@ -202,8 +216,29 @@ mcq_android_app/
 
 1. Admin `admin/admin123` দিয়ে login করে।
 2. Subject name লিখে subject যোগ করে।
-3. Subject select করে question, চারটি option, correct option save করে।
-4. Question `questions` table-এ save হয়।
+3. Admin panel-এ Registered Students card থেকে student username দেখতে পারে।
+4. নতুন subject add করলে app সেটাকে auto-select করে।
+5. Select Subject + Load MCQs card থেকে যেকোনো subject select করে Load Selected Subject চাপা যায়।
+6. Loaded subject-এর জন্য plus button দিয়ে একই জায়গায় একাধিক MCQ draft তৈরি করে।
+7. প্রতিটি MCQ-তে question + option A/B/C/D + correct option থাকে।
+8. সব question ও option add করার পর Save All MCQs চাপলে valid প্রশ্নগুলো selected subject-এর `questions` table data হিসেবে save হয়।
+9. Admin subject-wise report section-এ কোন student exam দিয়েছে, username, total/correct/percent দেখতে পারে।
+10. Loaded MCQs + Delete section থেকে selected subject-এর specific ভুল MCQ delete করতে পারে।
+11. Admin panel-এ mobile Back দিলে app direct close না হয়ে login screen-এ ফিরে যায়।
+
+
+### Admin Panel নতুন features
+
+| Feature | কী করবে |
+|---|---|
+| Registered Students | সব student username এবং exam submit count দেখাবে। |
+| Select Subject + Load MCQs | নতুন/পুরনো subject select করে MCQ builder ও loaded MCQ list refresh করবে। |
+| Bulk MCQ Builder | loaded subject-এর under-এ একই জায়গায় multiple MCQ draft বানাবে। |
+| Add Another MCQ | plus button চাপলে নতুন question + ৪টি option + correct answer field আসবে। |
+| Save All MCQs | সব draft add করার পর একবারে save করবে, বারবার save চাপতে হবে না। |
+| Remove Draft | save করার আগে ভুল draft remove করা যাবে। |
+| Subject-wise Exam Report | কোন subject-এ কতজন student exam দিয়েছে এবং username/marks দেখাবে। |
+| Loaded MCQs + Delete | selected/loaded subject-এর MCQ দেখাবে এবং delete button দিয়ে specific MCQ remove করবে। |
 
 ### Phase D: Student flow
 
@@ -282,11 +317,25 @@ Percent = 2 * 100 / 3 = 66.67%
 |---|---|---|
 | 1 | Admin panel open করো | screen ready |
 | 2 | subject name `Bangla` দিয়ে Add Subject | subject save হবে |
-| 3 | subject select করো | dropdown থেকে পাওয়া যাবে |
-| 4 | question + A/B/C/D + correct option দাও | input complete |
-| 5 | Save Question চাপো | question save হবে |
+| 3 | Select Subject + Load MCQs card-এ subject select করো | নতুন subject dropdown থেকে পাওয়া যাবে |
+| 4 | Load Selected Subject চাপো | ওই subject-এর MCQ builder ও loaded MCQ list দেখাবে |
+| 5 | question + A/B/C/D + correct option দাও | input complete |
+| 6 | Add Another MCQ চাপো | একই জায়গায় আরেকটি MCQ draft আসবে |
+| 7 | সব question ও option fill করো | প্রতিটি MCQ-তে ৪টি option থাকবে |
+| 8 | Save All MCQs চাপো | selected subject-এর under-এ একবারে সব valid question save হবে |
 
-### Test Case 4: Student exam submit
+### Test Case 4: Admin result report + question delete
+
+| Step | কাজ | Expected result |
+|---|---|---|
+| 1 | কোনো student exam submit করবে | `exam_results` table-এ row save হবে |
+| 2 | Admin login করবে | Admin Dashboard open হবে |
+| 3 | Registered Students card দেখবে | সব student username show হবে |
+| 4 | Subject-wise Exam Report দেখবে | subject অনুযায়ী username, correct/total, percent show হবে |
+| 5 | Loaded MCQs + Delete section-এ যাবে | selected subject-এর saved MCQ list দেখাবে |
+| 6 | specific MCQ-এর Delete Question চাপবে | সেই question database থেকে delete হবে |
+
+### Test Case 5: Student exam submit
 
 | Step | কাজ | Expected result |
 |---|---|---|
@@ -448,6 +497,6 @@ app/src/main/java/com/example/mcqapp/MainActivity.kt
 ```
 
 - `McqDatabase`: SQLite schema, seed, CRUD, bcrypt login।
-- `MainActivity`: Login, Admin Panel, Student Exam, Result UI, fancy card/picture helper।
+- `MainActivity`: Login, Admin Panel, student username list, subject select/load, bulk MCQ add/save-once flow, loaded MCQ list, result report, specific MCQ delete, safe admin back handling, Student Exam, Result UI, fancy card/picture helper।
 - `Question`, `User`, `SubjectItem`: simple data classes।
 

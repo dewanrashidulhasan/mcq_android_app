@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:allowBackup="false"
-        android:label="MCQ App"
+        android:label="SPEC MCQ"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity

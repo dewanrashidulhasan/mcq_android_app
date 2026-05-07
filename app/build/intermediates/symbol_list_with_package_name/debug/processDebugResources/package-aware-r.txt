@@ -1936,6 +1936,9 @@ color material_timepicker_button_stroke
 color material_timepicker_clock_text_color
 color material_timepicker_clockface
 color material_timepicker_modebutton_tint
+color mcq_accent
+color mcq_primary
+color mcq_primary_dark
 color mtrl_btn_bg_color_selector
 color mtrl_btn_ripple_color
 color mtrl_btn_stroke_color_selector
@@ -2929,6 +2932,7 @@ drawable ic_mtrl_checked_circle
 drawable ic_mtrl_chip_checked_black
 drawable ic_mtrl_chip_checked_circle
 drawable ic_mtrl_chip_close_circle
+drawable ic_quiz_hero
 drawable ic_search_black_24
 drawable indeterminate_static
 drawable m3_avd_hide_password
