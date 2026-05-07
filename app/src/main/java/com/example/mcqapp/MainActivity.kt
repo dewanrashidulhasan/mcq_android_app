@@ -2,15 +2,20 @@ package com.example.mcqapp
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.res.ColorStateList
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.button.MaterialButton
 import org.mindrot.jbcrypt.BCrypt
 import java.util.Locale
 
@@ -128,9 +133,20 @@ class McqDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, n
         return items
     }
 
+    fun getSubjectCount(): Int = countRows("subjects")
+
+    fun getQuestionCount(): Int = countRows("questions")
+
+    fun getResultCountForUser(userId: Long): Int {
+        readableDatabase.rawQuery("SELECT COUNT(*) FROM exam_results WHERE user_id = ?", arrayOf(userId.toString())).use { cursor ->
+            cursor.moveToFirst()
+            return cursor.getInt(0)
+        }
+    }
+
     fun addQuestion(subjectId: Long, text: String, options: List<String>, correct: String): Boolean {
         val normalizedCorrect = correct.trim().uppercase(Locale.US)
-        if (subjectId <= 0 || text.isBlank() || options.any { it.isBlank() } || normalizedCorrect !in listOf("A", "B", "C", "D")) {
+        if (subjectId <= 0 || text.isBlank() || options.size != 4 || options.any { it.isBlank() } || normalizedCorrect !in listOf("A", "B", "C", "D")) {
             return false
         }
         val values = ContentValues().apply {
@@ -179,6 +195,13 @@ class McqDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, n
         return percent
     }
 
+    private fun countRows(tableName: String): Int {
+        readableDatabase.rawQuery("SELECT COUNT(*) FROM $tableName", null).use { cursor ->
+            cursor.moveToFirst()
+            return cursor.getInt(0)
+        }
+    }
+
     private fun seedInitialData(db: SQLiteDatabase) {
         val adminValues = ContentValues().apply {
             put("username", "admin")
@@ -219,8 +242,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var db: McqDatabase
     private var currentUser: User? = null
 
+    private val primary = Color.parseColor("#6C5CE7")
+    private val primaryDark = Color.parseColor("#201A52")
+    private val accent = Color.parseColor("#00D2D3")
+    private val success = Color.parseColor("#00B894")
+    private val danger = Color.parseColor("#FF7675")
+    private val warning = Color.parseColor("#FDCB6E")
+    private val ink = Color.parseColor("#17202A")
+    private val muted = Color.parseColor("#6B7280")
+    private val surface = Color.WHITE
+    private val softSurface = Color.parseColor("#F6F7FB")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.statusBarColor = primaryDark
         db = McqDatabase(this)
         showLoginScreen()
     }
@@ -228,37 +263,50 @@ class MainActivity : AppCompatActivity() {
     private fun showLoginScreen() {
         val username = input("Username")
         val password = input("Password", password = true)
-        val root = verticalRoot("MCQ App Login")
-        root.addView(username)
-        root.addView(password)
-        root.addView(button("Login") {
-            val user = db.login(username.text.toString(), password.text.toString())
-            if (user == null) {
-                toast("Username/password ভুল।")
-            } else {
-                currentUser = user
-                if (user.role == "admin") showAdminPanel() else showExamScreen()
+        val root = screenRoot()
+        root.addView(heroCard("MCQ Pro", "Competition-ready offline quiz app", "Admin + Student + Result", true))
+        root.addView(
+            card().apply {
+                addView(sectionTitle("Secure Login", "bcrypt password hash সহ role-based access"))
+                addView(username)
+                addView(password)
+                addView(primaryButton("Login", "🔐") {
+                    val user = db.login(username.text.toString(), password.text.toString())
+                    if (user == null) {
+                        toast("Username/password ভুল।")
+                    } else {
+                        currentUser = user
+                        if (user.role == "admin") showAdminPanel() else showExamScreen()
+                    }
+                })
+                addView(outlineButton("Register as Student", "🎓") {
+                    val ok = db.createUser(username.text.toString(), password.text.toString())
+                    toast(if (ok) "Student account তৈরি হয়েছে। এখন login করো।" else "Register failed। username unique এবং password ৪+ character হতে হবে।")
+                })
+                addView(infoStrip("Default admin", "admin / admin123", warning))
             }
-        })
-        root.addView(button("Register as Student") {
-            val ok = db.createUser(username.text.toString(), password.text.toString())
-            toast(if (ok) "Student account তৈরি হয়েছে। এখন login করো।" else "Register failed। username unique এবং password ৪+ character হতে হবে।")
-        })
-        root.addView(text("Default admin: admin / admin123", 14f, false))
+        )
         setContentView(scroll(root))
     }
 
     private fun showAdminPanel() {
-        val root = verticalRoot("Admin Panel")
-        val subjectName = input("New subject name")
-        root.addView(subjectName)
-        root.addView(button("Add Subject") {
-            toast(if (db.addSubject(subjectName.text.toString())) "Subject save হয়েছে।" else "Subject save failed।")
-            showAdminPanel()
-        })
-
-        root.addView(text("Add Question", 22f, true))
         val subjects = db.getSubjects()
+        val root = screenRoot()
+        root.addView(heroCard("Admin Dashboard", "Question bank সুন্দরভাবে manage করো", "${currentUser?.username ?: "admin"} • Teacher Mode", false))
+        root.addView(statsRow(listOf("Subjects" to db.getSubjectCount().toString(), "Questions" to db.getQuestionCount().toString())))
+
+        val subjectName = input("New subject name")
+        root.addView(
+            card().apply {
+                addView(sectionTitle("Add Subject", "নতুন course/subject তৈরি করো"))
+                addView(subjectName)
+                addView(primaryButton("Save Subject", "➕") {
+                    toast(if (db.addSubject(subjectName.text.toString())) "Subject save হয়েছে।" else "Subject save failed। নাম খালি/duplicate হতে পারে।")
+                    showAdminPanel()
+                })
+            }
+        )
+
         val subjectSpinner = spinner(subjects)
         val question = input("Question")
         val optionA = input("Option A")
@@ -266,32 +314,48 @@ class MainActivity : AppCompatActivity() {
         val optionC = input("Option C")
         val optionD = input("Option D")
         val correct = input("Correct option (A/B/C/D)")
-        listOf(subjectSpinner, question, optionA, optionB, optionC, optionD, correct).forEach { root.addView(it) }
-        root.addView(button("Save Question") {
-            val subject = subjectSpinner.selectedItem as? SubjectItem
-            val ok = subject != null && db.addQuestion(
-                subject.id,
-                question.text.toString(),
-                listOf(optionA.text.toString(), optionB.text.toString(), optionC.text.toString(), optionD.text.toString()),
-                correct.text.toString()
-            )
-            toast(if (ok) "Question save হয়েছে।" else "Question save failed। সব field ঠিক করো।")
-        })
-        root.addView(button("Logout") { logout() })
+        root.addView(
+            card().apply {
+                addView(sectionTitle("Add MCQ Question", "চারটি option ও correct answer দাও"))
+                addView(label("Subject"))
+                addView(subjectSpinner)
+                listOf(question, optionA, optionB, optionC, optionD, correct).forEach { addView(it) }
+                addView(primaryButton("Save Question", "✅") {
+                    val subject = subjectSpinner.selectedItem as? SubjectItem
+                    val ok = subject != null && db.addQuestion(
+                        subject.id,
+                        question.text.toString(),
+                        listOf(optionA.text.toString(), optionB.text.toString(), optionC.text.toString(), optionD.text.toString()),
+                        correct.text.toString()
+                    )
+                    toast(if (ok) "Question save হয়েছে।" else "Question save failed। subject/correct option/field check করো।")
+                })
+            }
+        )
+        root.addView(dangerButton("Logout", "🚪") { logout() })
         setContentView(scroll(root))
     }
 
     private fun showExamScreen() {
-        val root = verticalRoot("Student Exam")
-        root.addView(text("Logged in: ${currentUser?.username}", 16f, false))
+        val user = currentUser ?: return showLoginScreen()
         val subjects = db.getSubjects()
+        val root = screenRoot()
+        root.addView(heroCard("Student Portal", "Subject select করে exam শুরু করো", "Welcome, ${user.username}", false))
+        root.addView(statsRow(listOf("Subjects" to db.getSubjectCount().toString(), "My Exams" to db.getResultCountForUser(user.id).toString())))
+
         val subjectSpinner = spinner(subjects)
-        root.addView(subjectSpinner)
-        root.addView(button("Load Questions") {
-            val subject = subjectSpinner.selectedItem as? SubjectItem
-            if (subject == null) toast("আগে subject যোগ করো।") else showQuestionPaper(subject)
-        })
-        root.addView(button("Logout") { logout() })
+        root.addView(
+            card().apply {
+                addView(sectionTitle("Choose Exam", "Available subject থেকে question load করো"))
+                addView(label("Subject"))
+                addView(subjectSpinner)
+                addView(primaryButton("Load Questions", "🚀") {
+                    val subject = subjectSpinner.selectedItem as? SubjectItem
+                    if (subject == null) toast("আগে subject যোগ করো।") else showQuestionPaper(subject)
+                })
+            }
+        )
+        root.addView(dangerButton("Logout", "🚪") { logout() })
         setContentView(scroll(root))
     }
 
@@ -302,21 +366,13 @@ class MainActivity : AppCompatActivity() {
             showExamScreen()
             return
         }
-        val root = verticalRoot("Exam: ${subject.name}")
+        val root = screenRoot()
+        root.addView(heroCard("Exam: ${subject.name}", "সব question answer করে submit করো", "${questions.size} Questions", false))
         val answers = mutableMapOf<Long, RadioGroup>()
         questions.forEachIndexed { index, q ->
-            root.addView(text("${index + 1}. ${q.text}", 18f, true))
-            val group = RadioGroup(this).apply { orientation = RadioGroup.VERTICAL }
-            mapOf("A" to q.optionA, "B" to q.optionB, "C" to q.optionC, "D" to q.optionD).forEach { (key, value) ->
-                group.addView(RadioButton(this@MainActivity).apply {
-                    text = "$key. $value"
-                    tag = key
-                })
-            }
-            answers[q.id] = group
-            root.addView(group)
+            root.addView(questionCard(index + 1, q, answers))
         }
-        root.addView(button("Submit Exam") {
+        root.addView(primaryButton("Submit Exam", "🏁") {
             var correct = 0
             questions.forEach { q ->
                 val group = answers[q.id]
@@ -326,17 +382,23 @@ class MainActivity : AppCompatActivity() {
             val percent = db.saveResult(currentUser!!.id, subject.id, questions.size, correct)
             showResultScreen(questions.size, correct, percent)
         })
-        root.addView(button("Back") { showExamScreen() })
+        root.addView(outlineButton("Back to Subjects", "⬅") { showExamScreen() })
         setContentView(scroll(root))
     }
 
     private fun showResultScreen(total: Int, correct: Int, percent: Double) {
-        val root = verticalRoot("Result")
-        root.addView(text("Total: $total", 22f, true))
-        root.addView(text("Correct: $correct", 22f, true))
-        root.addView(text("Percent: ${String.format(Locale.US, "%.2f", percent)}%", 22f, true))
-        root.addView(button("Take Another Exam") { showExamScreen() })
-        root.addView(button("Logout") { logout() })
+        val root = screenRoot()
+        root.addView(heroCard("Result Published", "তোমার score database-এ save হয়েছে", resultEmoji(percent), false))
+        root.addView(
+            card().apply {
+                val percentText = String.format(Locale.US, "%.2f%%", percent)
+                addView(bigScore(percentText))
+                addView(statsRow(listOf("Total" to total.toString(), "Correct" to correct.toString())))
+                addView(infoStrip("Performance", performanceMessage(percent), if (percent >= 60.0) success else danger))
+            }
+        )
+        root.addView(primaryButton("Take Another Exam", "🔁") { showExamScreen() })
+        root.addView(dangerButton("Logout", "🚪") { logout() })
         setContentView(scroll(root))
     }
 
@@ -345,36 +407,235 @@ class MainActivity : AppCompatActivity() {
         showLoginScreen()
     }
 
-    private fun verticalRoot(title: String): LinearLayout = LinearLayout(this).apply {
+    private fun screenRoot(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        gravity = Gravity.CENTER_HORIZONTAL
-        setPadding(32, 48, 32, 48)
-        addView(text(title, 28f, true))
+        setPadding(dp(18), dp(20), dp(18), dp(28))
+        background = gradient(intArrayOf(Color.parseColor("#EEF2FF"), Color.parseColor("#FDFBFF")), GradientDrawable.Orientation.TOP_BOTTOM, dp(0).toFloat())
     }
 
-    private fun scroll(child: View): ScrollView = ScrollView(this).apply { addView(child) }
+    private fun heroCard(title: String, subtitle: String, badge: String, showPicture: Boolean): LinearLayout = card(primaryDark).apply {
+        addView(
+            LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+                setPadding(dp(20), dp(22), dp(20), dp(22))
+                if (showPicture) addView(pictureSection())
+                addView(chip(badge, accent))
+                addView(text(title, 30f, true, Color.WHITE, Gravity.CENTER))
+                addView(text(subtitle, 15f, false, Color.parseColor("#DCE6FF"), Gravity.CENTER))
+            }
+        )
+    }
 
-    private fun text(value: String, size: Float, bold: Boolean): TextView = TextView(this).apply {
-        text = value
-        textSize = size
-        setPadding(0, 12, 0, 12)
-        if (bold) typeface = Typeface.DEFAULT_BOLD
+    private fun pictureSection(): FrameLayout = FrameLayout(this).apply {
+        layoutParams = LinearLayout.LayoutParams(dp(150), dp(118)).apply { bottomMargin = dp(14) }
+        background = gradient(intArrayOf(Color.parseColor("#8E7CFF"), Color.parseColor("#00D2D3")), GradientDrawable.Orientation.TL_BR, dp(30).toFloat())
+        addView(
+            ImageView(this@MainActivity).apply {
+                setImageResource(R.drawable.ic_quiz_hero)
+                alpha = 0.95f
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                setPadding(dp(20), dp(14), dp(20), dp(14))
+                layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            }
+        )
+        addView(
+            TextView(this@MainActivity).apply {
+                text = "MCQ"
+                textSize = 13f
+                setTextColor(primaryDark)
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                background = round(Color.WHITE, dp(18).toFloat())
+                layoutParams = FrameLayout.LayoutParams(dp(64), dp(34), Gravity.BOTTOM or Gravity.END).apply {
+                    rightMargin = dp(8)
+                    bottomMargin = dp(8)
+                }
+            }
+        )
+    }
+
+    private fun card(color: Int = surface): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        elevation = dp(8).toFloat()
+        background = round(color, dp(26).toFloat(), if (color == surface) Color.parseColor("#E7E9F5") else color, dp(1))
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            bottomMargin = dp(14)
+        }
+        setPadding(dp(18), dp(18), dp(18), dp(18))
+    }
+
+    private fun sectionTitle(title: String, subtitle: String): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        addView(text(title, 22f, true, ink, Gravity.START))
+        addView(text(subtitle, 13f, false, muted, Gravity.START))
+    }
+
+    private fun questionCard(number: Int, question: Question, answers: MutableMap<Long, RadioGroup>): LinearLayout = card().apply {
+        addView(chip("Question $number", primary))
+        addView(text(question.text, 18f, true, ink, Gravity.START))
+        val group = RadioGroup(this@MainActivity).apply {
+            orientation = RadioGroup.VERTICAL
+            setPadding(0, dp(6), 0, 0)
+        }
+        mapOf("A" to question.optionA, "B" to question.optionB, "C" to question.optionC, "D" to question.optionD).forEach { (key, value) ->
+            group.addView(optionButton(key, value))
+        }
+        answers[question.id] = group
+        addView(group)
+    }
+
+    private fun optionButton(key: String, value: String): RadioButton = RadioButton(this).apply {
+        text = "$key. $value"
+        tag = key
+        textSize = 15f
+        setTextColor(ink)
+        buttonTintList = ColorStateList.valueOf(primary)
+        background = round(softSurface, dp(18).toFloat())
+        setPadding(dp(14), dp(10), dp(14), dp(10))
+        layoutParams = RadioGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            topMargin = dp(8)
+        }
+    }
+
+    private fun statsRow(items: List<Pair<String, String>>): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(14) }
+        items.forEachIndexed { index, item ->
+            addView(statBox(item.first, item.second).apply {
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                    if (index > 0) leftMargin = dp(8)
+                }
+            })
+        }
+    }
+
+    private fun statBox(label: String, value: String): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        elevation = dp(4).toFloat()
+        background = round(surface, dp(20).toFloat(), Color.parseColor("#E7E9F5"), dp(1))
+        setPadding(dp(14), dp(14), dp(14), dp(14))
+        addView(
+            LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                addView(text(value, 26f, true, primary, Gravity.CENTER))
+                addView(text(label, 12f, false, muted, Gravity.CENTER))
+            }
+        )
+    }
+
+    private fun bigScore(value: String): TextView = text(value, 46f, true, primary, Gravity.CENTER).apply {
+        background = gradient(intArrayOf(Color.parseColor("#F4F1FF"), Color.parseColor("#E9FBFF")), GradientDrawable.Orientation.LEFT_RIGHT, dp(26).toFloat())
+        setPadding(dp(16), dp(18), dp(16), dp(18))
     }
 
     private fun input(hintText: String, password: Boolean = false): EditText = EditText(this).apply {
         hint = hintText
+        textSize = 15f
+        setTextColor(ink)
+        setHintTextColor(muted)
         setSingleLine(false)
+        minHeight = dp(54)
+        background = round(softSurface, dp(16).toFloat(), Color.parseColor("#E2E8F0"), dp(1))
+        setPadding(dp(16), dp(10), dp(16), dp(10))
         inputType = if (password) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD else InputType.TYPE_CLASS_TEXT
-    }
-
-    private fun button(label: String, action: () -> Unit): Button = Button(this).apply {
-        text = label
-        setOnClickListener { action() }
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            topMargin = dp(10)
+        }
     }
 
     private fun spinner(items: List<SubjectItem>): Spinner = Spinner(this).apply {
         adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, items)
+        background = round(softSurface, dp(16).toFloat(), Color.parseColor("#E2E8F0"), dp(1))
+        setPadding(dp(12), dp(8), dp(12), dp(8))
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54)).apply { topMargin = dp(8) }
     }
+
+    private fun primaryButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, primary, Color.WHITE, action)
+
+    private fun dangerButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, danger, Color.WHITE, action)
+
+    private fun outlineButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, Color.TRANSPARENT, primary, action).apply {
+        strokeWidth = dp(1)
+        strokeColor = ColorStateList.valueOf(primary)
+        backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+    }
+
+    private fun fancyButton(label: String, icon: String, backgroundColor: Int, textColor: Int, action: () -> Unit): MaterialButton = MaterialButton(this).apply {
+        text = "$icon  $label"
+        textSize = 14f
+        typeface = Typeface.DEFAULT_BOLD
+        isAllCaps = false
+        cornerRadius = dp(18)
+        setTextColor(textColor)
+        backgroundTintList = ColorStateList.valueOf(backgroundColor)
+        minHeight = dp(54)
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)).apply { topMargin = dp(12) }
+        setOnClickListener { action() }
+    }
+
+    private fun label(value: String): TextView = text(value, 13f, true, muted, Gravity.START).apply {
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) }
+    }
+
+    private fun chip(value: String, color: Int): TextView = text(value, 12f, true, Color.WHITE, Gravity.CENTER).apply {
+        background = round(color, dp(18).toFloat())
+        setPadding(dp(12), dp(6), dp(12), dp(6))
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(10) }
+    }
+
+    private fun infoStrip(label: String, value: String, color: Int): TextView = text("$label: $value", 13f, true, ink, Gravity.CENTER).apply {
+        background = round(adjustAlpha(color, 0.18f), dp(16).toFloat(), adjustAlpha(color, 0.7f), dp(1))
+        setPadding(dp(12), dp(10), dp(12), dp(10))
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) }
+    }
+
+    private fun text(value: String, size: Float, bold: Boolean, color: Int, gravityValue: Int): TextView = TextView(this).apply {
+        text = value
+        textSize = size
+        setTextColor(color)
+        gravity = gravityValue
+        includeFontPadding = true
+        if (bold) typeface = Typeface.DEFAULT_BOLD
+        setPadding(0, dp(4), 0, dp(4))
+    }
+
+    private fun scroll(child: View): ScrollView = ScrollView(this).apply {
+        isFillViewport = true
+        addView(child)
+    }
+
+    private fun resultEmoji(percent: Double): String = when {
+        percent >= 80.0 -> "🏆 Excellent"
+        percent >= 60.0 -> "🌟 Good Job"
+        percent >= 40.0 -> "📘 Keep Practicing"
+        else -> "💪 Try Again"
+    }
+
+    private fun performanceMessage(percent: Double): String = when {
+        percent >= 80.0 -> "Competition level preparation ভালো চলছে।"
+        percent >= 60.0 -> "ভালো, তবে আরও practice করলে score বাড়বে।"
+        percent >= 40.0 -> "Basic clear হচ্ছে, ভুল question review দরকার।"
+        else -> "Foundation weak, topic ধরে ধরে revise করো।"
+    }
+
+    private fun gradient(colors: IntArray, orientation: GradientDrawable.Orientation, radius: Float): GradientDrawable = GradientDrawable(orientation, colors).apply {
+        cornerRadius = radius
+    }
+
+    private fun round(color: Int, radius: Float, strokeColor: Int? = null, strokeWidth: Int = 0): GradientDrawable = GradientDrawable().apply {
+        setColor(color)
+        cornerRadius = radius
+        if (strokeColor != null) setStroke(strokeWidth, strokeColor)
+    }
+
+    private fun adjustAlpha(color: Int, factor: Float): Int {
+        val alpha = (Color.alpha(color) * factor).toInt()
+        return Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 }

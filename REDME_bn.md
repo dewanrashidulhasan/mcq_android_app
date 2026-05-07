@@ -16,6 +16,7 @@
 একটি beginner-friendly কিন্তু practical Android MVP তৈরি করা, যেখানে,
 
 - Kotlin দিয়ে native Android app বানানো হয়েছে।
+- Fancy card-based UI, gradient background, hero picture section, dashboard stats, rounded buttons যোগ করা হয়েছে।
 - SQLite দিয়ে local database রাখা হয়েছে।
 - Password plaintext রাখা হয়নি, `bcrypt` hash করা হয়েছে।
 - Admin ও Student আলাদা role অনুযায়ী screen পায়।
@@ -58,7 +59,7 @@
 - Firebase/cloud login।
 - Online exam sync।
 - Payment, leaderboard, analytics।
-- Complex animation বা advanced Material Design screen।
+- Heavy animation বা internet-based premium UI asset।
 - Production-level migration framework।
 
 ### Alternative approaches, কেন ব্যবহার করা হয়নি
@@ -144,7 +145,10 @@ mcq_android_app/
     └── src/main/
         ├── AndroidManifest.xml
         ├── java/com/example/mcqapp/MainActivity.kt
-        └── res/values/styles.xml
+        ├── res/drawable/ic_quiz_hero.xml
+        └── res/values/
+            ├── colors.xml
+            └── styles.xml
 ```
 
 ### File গুলোর কাজ
@@ -155,12 +159,27 @@ mcq_android_app/
 | `build.gradle.kts` | Android/Kotlin plugin version define। |
 | `app/build.gradle.kts` | app id, SDK version, dependency define। |
 | `AndroidManifest.xml` | app entry point `MainActivity` declare। |
-| `MainActivity.kt` | database, auth, admin panel, exam, result—সব MVP logic। |
+| `MainActivity.kt` | database, auth, fancy card UI, admin panel, exam, result—সব MVP logic। |
+| `ic_quiz_hero.xml` | Login hero picture/illustration section-এর vector image। |
+| `colors.xml` | Fancy UI color palette। |
 | `styles.xml` | basic Material theme। |
 
 ---
 
 ## 5) Step-by-Step Logic
+
+
+### Fancy UI sections
+
+| Screen | UI improvement |
+|---|---|
+| Login | Gradient background, dark hero card, vector picture section, rounded login/register buttons। |
+| Admin | Dashboard hero, subject/question statistics, separate card for subject ও MCQ form। |
+| Student | Welcome hero, available subjects count, exam start card। |
+| Exam | প্রতিটি question আলাদা rounded card, option গুলো soft radio-button blocks। |
+| Result | Big percentage card, total/correct stats, performance message। |
+
+> Picture section-এর জন্য `res/drawable/ic_quiz_hero.xml` vector asset ব্যবহার করা হয়েছে, তাই extra image file download দরকার নেই।
 
 ### Phase A: App start
 
@@ -422,13 +441,13 @@ Google Play Store-এ upload করতে সাধারণত `.aab` লাগ
 
 ## 15) Code Map
 
-সব MVP logic এই file-এ আছে।
+সব MVP logic এবং fancy UI helper এই file-এ আছে।
 
 ```text
 app/src/main/java/com/example/mcqapp/MainActivity.kt
 ```
 
 - `McqDatabase`: SQLite schema, seed, CRUD, bcrypt login।
-- `MainActivity`: Login, Admin Panel, Student Exam, Result UI।
+- `MainActivity`: Login, Admin Panel, Student Exam, Result UI, fancy card/picture helper।
 - `Question`, `User`, `SubjectItem`: simple data classes।
 
