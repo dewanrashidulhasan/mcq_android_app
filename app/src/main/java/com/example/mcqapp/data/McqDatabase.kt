@@ -8,7 +8,20 @@ import kotlinx.coroutines.withContext
 import org.mindrot.jbcrypt.BCrypt
 import java.util.Locale
 
+// =============================================================================
+// MCQ Database Class - SQLite Database Handler for Quiz App
+// Total Tables: 4 (users | subjects | questions | exam_results)
+// Total Sample Data: 1 user | 1 subject | 3 questions | 0 exam_results
+// =============================================================================
+
 class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+
+    // ===========================================================================
+    // TABLE 1: USERS - Stores user accounts (Admin & Students)
+    // Total Records: 1 (1 Admin, 0 Students)
+    // Fields: id | username | password_hash | role | created_at
+    // Role Values: 'admin' | 'student'
+    // ===========================================================================
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """
@@ -21,6 +34,12 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
             )
             """.trimIndent()
         )
+
+    // ===========================================================================
+    // TABLE 2: SUBJECTS - Stores subject/category names
+    // Total Records: 1 (General Knowledge)
+    // Fields: id | name | created_at
+    // ===========================================================================
         db.execSQL(
             """
             CREATE TABLE subjects (
@@ -30,6 +49,14 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
             )
             """.trimIndent()
         )
+
+    // ===========================================================================
+    // TABLE 3: QUESTIONS - Stores MCQ questions with 4 options
+    // Total Records: 3 (Demo questions)
+    // Fields: id | subject_id | question_text | option_a | option_b | option_c | option_d | correct_option | created_at
+    // Correct Option Values: 'A' | 'B' | 'C' | 'D'
+    // Foreign Key: subject_id -> subjects(id)
+    // ===========================================================================
         db.execSQL(
             """
             CREATE TABLE questions (
@@ -46,6 +73,13 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
             )
             """.trimIndent()
         )
+
+    // ===========================================================================
+    // TABLE 4: EXAM_RESULTS - Stores user exam attempt results
+    // Total Records: 0 (No exams taken yet)
+    // Fields: id | user_id | subject_id | total | correct | percent | submitted_at
+    // Foreign Keys: user_id -> users(id) | subject_id -> subjects(id)
+    // ===========================================================================
         db.execSQL(
             """
             CREATE TABLE exam_results (
@@ -72,7 +106,15 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
         onCreate(db)
     }
 
+    // ===========================================================================
+    // SEED DATA - Initial sample data for demo/testing
+    // Creates: 1 Admin User | 1 Subject | 3 Questions
+    // ===========================================================================
     private fun seedInitialData(db: SQLiteDatabase) {
+
+        // --- USER SEED: 1 Admin Account ---
+        // Username: admin | Password: admin123 (BCrypt hashed)
+        // Role: admin
         val adminValues = ContentValues().apply {
             put("username", "admin")
             put("password_hash", BCrypt.hashpw("admin123", BCrypt.gensalt(12)))
@@ -80,11 +122,15 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
         }
         db.insert("users", null, adminValues)
 
+        // --- SUBJECT SEED: 1 Subject ---
+        // Name: General Knowledge
         val subjectValues = ContentValues().apply { put("name", "General Knowledge") }
         val subjectId = db.insert("subjects", null, subjectValues)
 
+        // --- QUESTIONS SEED: 3 Demo Questions ---
+        // Question Format: [question_text, option_a, option_b, option_c, option_d, correct_answer]
         val demoQuestions = listOf(
-            listOf("Android app কোন ভাষা দিয়ে বানানো যায়?", "Kotlin", "HTML only", "SQL only", "Photoshop", "A"),
+            listOf("Android app কোন ভাষা দিয়ে বানানো যায়?", "Kotlin", "HTML only", "SQL only", "Photoshop", "A"),
             listOf("SQLite কী ধরনের database?", "Cloud only", "Local relational database", "Image editor", "Operating system", "B"),
             listOf("MCQ-এর full form কী?", "Multiple Choice Question", "Main Code Query", "Mobile Class Queue", "Modern Cloud Quiz", "A")
         )
@@ -103,6 +149,7 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
     }
 
     companion object {
+        // Database file name stored in: data/data/com.example.mcqapp/databases/mcq_app.db
         private const val DATABASE_NAME = "mcq_app.db"
         private const val DATABASE_VERSION = 1
     }
