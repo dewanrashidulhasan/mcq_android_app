@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="mcq_accent">#00D2D3</color>
+    <color name="mcq_primary">#6C5CE7</color>
+    <color name="mcq_primary_dark">#201A52</color>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/mcq_primary</item>
+        <item name="colorPrimaryVariant">@color/mcq_primary_dark</item>
+        <item name="colorSecondary">@color/mcq_accent</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:navigationBarColor">#111827</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(.\\\\gradlew.bat assembleDebug)",
+      "PowerShell(.\\\\gradlew.bat --stop)"
+    ]
+  }
+}

@@ -94,6 +94,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun logout() {
+        viewModel.setCurrentUser(null)
+        showLoginScreen()
+    }
+
     private fun showLoginScreen() {
         val username = input("Username")
         val password = input("Password", password = true)
@@ -374,10 +379,124 @@ class MainActivity : AppCompatActivity() {
         setContentView(scroll(root))
     }
 
-    private fun logout() {
-        viewModel.setCurrentUser(null)
-        currentAdminSubjectId = null
-        showLoginScreen()
+    private fun subjectSelectorCard(subjects: List<SubjectItem>, selected: SubjectItem?): LinearLayout = card().apply {
+        addView(sectionTitle("Select Subject", "Manage questions for this subject"))
+        val spinner = spinner(subjects)
+        selected?.let {
+            val index = subjects.indexOf(it)
+            if (index >= 0) spinner.setSelection(index)
+        }
+        addView(spinner)
+        addView(primaryButton("Update Selection", "✅") {
+            val item = spinner.selectedItem as? SubjectItem
+            if (item != null) {
+                currentAdminSubjectId = item.id
+                showAdminPanel()
+            }
+        })
+    }
+
+    private fun bulkQuestionBuilderCard(subject: SubjectItem): LinearLayout = card().apply {
+        addView(sectionTitle("Add Questions", "Bulk add questions to ${subject.name}"))
+        val questions = mutableListOf<QuestionDraftViews>()
+        val container = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
+
+        fun addDraft() {
+            val draft = QuestionDraftViews(
+                input("Question Text"),
+                input("Option A"),
+                input("Option B"),
+                input("Option C"),
+                input("Option D"),
+                input("Correct Option (A/B/C/D)")
+            )
+            val row = card().apply {
+                addView(text("Question", 12f, true, primary, Gravity.START))
+                addView(draft.question)
+                addView(draft.optionA)
+                addView(draft.optionB)
+                addView(draft.optionC)
+                addView(draft.optionD)
+                addView(draft.correct)
+            }
+            container.addView(row)
+            questions.add(draft)
+        }
+
+        addDraft()
+        addView(container)
+        addView(outlineButton("Add Another", "➕") {
+            addDraft()
+            // Note: this won't refresh the UI since it's just adding to the list.
+            // For a real app we'd need a better way to refresh the card.
+            toast("Draft added. Please rebuild the screen to see it.")
+        })
+        addView(primaryButton("Save All", "💾") {
+            val drafts = questions.map {
+                Triple(it.question.text.toString(),
+                      listOf(it.optionA.text.toString(), it.optionB.text.toString(), it.optionC.text.toString(), it.optionD.text.toString()),
+                      it.correct.text.toString())
+            }
+            viewModel.addQuestions(subject.id, drafts) { saved, failed ->
+                runOnUiThread {
+                    toast("Saved: $saved, Failed: $failed")
+                    showAdminPanel()
+                }
+            }
+        })
+    }
+
+    private fun questionDeleteCard(subject: SubjectItem): LinearLayout = card().apply {
+        addView(sectionTitle("Delete Questions", "Remove questions from ${subject.name}"))
+        viewModel.getQuestions(subject.id) { questions ->
+            runOnUiThread {
+                val list = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
+                questions.forEach { q ->
+                    list.addView(LinearLayout(this@MainActivity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER_VERTICAL
+                        addView(text(q.text, 13f, false, ink, Gravity.START).apply {
+                            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                        })
+                        addView(dangerButton("Delete", "🗑️") {
+                            viewModel.deleteQuestion(q.id) { ok ->
+                                runOnUiThread {
+                                    toast(if (ok) "Deleted." else "Error.")
+                                    showAdminPanel()
+                                }
+                            }
+                        }.apply {
+                            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                        })
+                    })
+                }
+                addView(list)
+            }
+        }
+    }
+
+    private fun resultReportCard(subjects: List<SubjectItem>): LinearLayout = card().apply {
+        addView(sectionTitle("Subject Reports", "Overall performance summary"))
+        val list = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
+        subjects.forEach { subject ->
+            list.addView(resultRow(subject))
+        }
+        addView(list)
+    }
+
+    private fun resultRow(subject: SubjectItem): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        setPadding(dp(10), dp(8), dp(10), dp(8))
+        addView(text(subject.name, 14f, true, ink, Gravity.START).apply {
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        addView(primaryButton("View Report", "📊") {
+            // Implementation for viewing report could go here
+            toast("Report for ${subject.name} is coming soon.")
+        }.apply {
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        })
     }
 
     private fun screenRoot(): LinearLayout = LinearLayout(this).apply {
@@ -552,7 +671,7 @@ class MainActivity : AppCompatActivity() {
         layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) }
     }
 
-    private la-chip(value: String, color: Int): TextView = text(value, 12f, true, Color.WHITE, Gravity.CENTER).apply {
+    private fun chip(value: String, color: Int): TextView = text(value, 12f, true, Color.WHITE, Gravity.CENTER).apply {
         background = round(color, dp(18).toFloat())
         setPadding(dp(12), dp(6), dp(12), dp(6))
         layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(10) }

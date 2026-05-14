@@ -1,36 +1,42 @@
-com.example.mcqapp-material-1.12.0-0 C:\Users\PC\.gradle\caches\9.0.0\transforms\00b0c0dcdff37475aecc931f7c23b3e5\transformed\material-1.12.0\res
-com.example.mcqapp-jetified-savedstate-1.2.1-1 C:\Users\PC\.gradle\caches\9.0.0\transforms\08fbc3d2807fc1b981ba34fc4642d5b6\transformed\jetified-savedstate-1.2.1\res
-com.example.mcqapp-jetified-startup-runtime-1.1.1-2 C:\Users\PC\.gradle\caches\9.0.0\transforms\0ffda3160d590d1e228d9a229c35d390\transformed\jetified-startup-runtime-1.1.1\res
-com.example.mcqapp-lifecycle-livedata-2.6.2-3 C:\Users\PC\.gradle\caches\9.0.0\transforms\222720f0bcbaa6622fa2b4c0caa94dde\transformed\lifecycle-livedata-2.6.2\res
-com.example.mcqapp-jetified-lifecycle-viewmodel-savedstate-2.6.2-4 C:\Users\PC\.gradle\caches\9.0.0\transforms\2cd7de0113fa047447d9ddc363497b95\transformed\jetified-lifecycle-viewmodel-savedstate-2.6.2\res
-com.example.mcqapp-transition-1.5.0-5 C:\Users\PC\.gradle\caches\9.0.0\transforms\2d6c52576e4fce00f45aebe214638509\transformed\transition-1.5.0\res
-com.example.mcqapp-core-1.15.0-6 C:\Users\PC\.gradle\caches\9.0.0\transforms\349e3051916c3aab8634bd7debc730d3\transformed\core-1.15.0\res
-com.example.mcqapp-recyclerview-1.1.0-7 C:\Users\PC\.gradle\caches\9.0.0\transforms\359f94028c365323ccd1c8e3448c0ba8\transformed\recyclerview-1.1.0\res
-com.example.mcqapp-coordinatorlayout-1.1.0-8 C:\Users\PC\.gradle\caches\9.0.0\transforms\3ac3a04978f927356b2841e5593c8c40\transformed\coordinatorlayout-1.1.0\res
-com.example.mcqapp-jetified-activity-1.8.0-9 C:\Users\PC\.gradle\caches\9.0.0\transforms\63593855af22386bf8cc1fc544135db1\transformed\jetified-activity-1.8.0\res
-com.example.mcqapp-jetified-profileinstaller-1.3.1-10 C:\Users\PC\.gradle\caches\9.0.0\transforms\642a4ea56ea7871ed1c3158bcc29b90e\transformed\jetified-profileinstaller-1.3.1\res
-com.example.mcqapp-core-runtime-2.2.0-11 C:\Users\PC\.gradle\caches\9.0.0\transforms\6463f6e1a7a99311ffac8d89e6346b42\transformed\core-runtime-2.2.0\res
-com.example.mcqapp-cardview-1.0.0-12 C:\Users\PC\.gradle\caches\9.0.0\transforms\64ae49fa98a6ea77cee2efb36c1cd9f0\transformed\cardview-1.0.0\res
-com.example.mcqapp-jetified-core-ktx-1.15.0-13 C:\Users\PC\.gradle\caches\9.0.0\transforms\67be2d4a09c3dde98fe70d1a66d7894c\transformed\jetified-core-ktx-1.15.0\res
-com.example.mcqapp-fragment-1.5.4-14 C:\Users\PC\.gradle\caches\9.0.0\transforms\697083e89f2c3d37774562d9e6de7ba6\transformed\fragment-1.5.4\res
-com.example.mcqapp-jetified-lifecycle-process-2.6.2-15 C:\Users\PC\.gradle\caches\9.0.0\transforms\7d492d997b8aa11c4f53ae17e170aa92\transformed\jetified-lifecycle-process-2.6.2\res
-com.example.mcqapp-jetified-annotation-experimental-1.4.1-16 C:\Users\PC\.gradle\caches\9.0.0\transforms\a29826544f57027ff58a71d7b17742cb\transformed\jetified-annotation-experimental-1.4.1\res
-com.example.mcqapp-constraintlayout-2.0.1-17 C:\Users\PC\.gradle\caches\9.0.0\transforms\a43dd7fc71699a11dbbb06e6bb9eef22\transformed\constraintlayout-2.0.1\res
-com.example.mcqapp-lifecycle-runtime-2.6.2-18 C:\Users\PC\.gradle\caches\9.0.0\transforms\aa4c6cde01568aa28ab70fe6d5910bcc\transformed\lifecycle-runtime-2.6.2\res
-com.example.mcqapp-appcompat-1.7.0-19 C:\Users\PC\.gradle\caches\9.0.0\transforms\b0b1564df22135a480b85cff3127a291\transformed\appcompat-1.7.0\res
-com.example.mcqapp-lifecycle-livedata-core-2.6.2-20 C:\Users\PC\.gradle\caches\9.0.0\transforms\b4fe9051a47551539756afda2a282f7f\transformed\lifecycle-livedata-core-2.6.2\res
-com.example.mcqapp-jetified-emoji2-views-helper-1.3.0-21 C:\Users\PC\.gradle\caches\9.0.0\transforms\b6e3f99bb377799b294c657bf08c615d\transformed\jetified-emoji2-views-helper-1.3.0\res
-com.example.mcqapp-jetified-viewpager2-1.0.0-22 C:\Users\PC\.gradle\caches\9.0.0\transforms\c2aa8356bf5b8a513ad08efc3cab1724\transformed\jetified-viewpager2-1.0.0\res
-com.example.mcqapp-drawerlayout-1.1.1-23 C:\Users\PC\.gradle\caches\9.0.0\transforms\c602924fe77c61879c6634264093a35c\transformed\drawerlayout-1.1.1\res
-com.example.mcqapp-jetified-emoji2-1.3.0-24 C:\Users\PC\.gradle\caches\9.0.0\transforms\c6311ef641c2afe6d9a4a9ad099be408\transformed\jetified-emoji2-1.3.0\res
-com.example.mcqapp-jetified-tracing-1.2.0-25 C:\Users\PC\.gradle\caches\9.0.0\transforms\dcb5b15e1071aa919694e7a32c11c566\transformed\jetified-tracing-1.2.0\res
-com.example.mcqapp-lifecycle-viewmodel-2.6.2-26 C:\Users\PC\.gradle\caches\9.0.0\transforms\e8a9db464c9ba6b5809ff0749e3ece1d\transformed\lifecycle-viewmodel-2.6.2\res
-com.example.mcqapp-jetified-appcompat-resources-1.7.0-27 C:\Users\PC\.gradle\caches\9.0.0\transforms\ef207bcc808d25e8ab4038698f29366c\transformed\jetified-appcompat-resources-1.7.0\res
-com.example.mcqapp-pngs-28 D:\Users\ALL WORKS\mcq_android_app\app\build\generated\res\pngs\debug
-com.example.mcqapp-resValues-29 D:\Users\ALL WORKS\mcq_android_app\app\build\generated\res\resValues\debug
-com.example.mcqapp-updated_navigation_xml-30 D:\Users\ALL WORKS\mcq_android_app\app\build\generated\updated_navigation_xml\debug
-com.example.mcqapp-packageDebugResources-31 D:\Users\ALL WORKS\mcq_android_app\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
-com.example.mcqapp-packageDebugResources-32 D:\Users\ALL WORKS\mcq_android_app\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
-com.example.mcqapp-debug-33 D:\Users\ALL WORKS\mcq_android_app\app\build\intermediates\merged_res\debug\mergeDebugResources
-com.example.mcqapp-debug-34 D:\Users\ALL WORKS\mcq_android_app\app\src\debug\res
-com.example.mcqapp-main-35 D:\Users\ALL WORKS\mcq_android_app\app\src\main\res
+com.example.mcqapp-jetified-activity-ktx-1.8.0-0 C:\Users\PC\.gradle\caches\8.13\transforms\0025a4100811ed6a59173391f19245a8\transformed\jetified-activity-ktx-1.8.0\res
+com.example.mcqapp-fragment-1.6.1-1 C:\Users\PC\.gradle\caches\8.13\transforms\01986e1f8dcd996d89252915119b8994\transformed\fragment-1.6.1\res
+com.example.mcqapp-jetified-emoji2-views-helper-1.3.0-2 C:\Users\PC\.gradle\caches\8.13\transforms\04ed3c7b7e7cb83a1fc1658c4eecbd4f\transformed\jetified-emoji2-views-helper-1.3.0\res
+com.example.mcqapp-constraintlayout-2.0.1-3 C:\Users\PC\.gradle\caches\8.13\transforms\0e2a766026b37a250a28e86657713a92\transformed\constraintlayout-2.0.1\res
+com.example.mcqapp-lifecycle-runtime-2.6.2-4 C:\Users\PC\.gradle\caches\8.13\transforms\1b9ee8f80637c69dd49a292761262c3c\transformed\lifecycle-runtime-2.6.2\res
+com.example.mcqapp-cardview-1.0.0-5 C:\Users\PC\.gradle\caches\8.13\transforms\2594203177697c2a0f97d022a568cc02\transformed\cardview-1.0.0\res
+com.example.mcqapp-recyclerview-1.1.0-6 C:\Users\PC\.gradle\caches\8.13\transforms\31b485fcd7f876946217110f1c615b66\transformed\recyclerview-1.1.0\res
+com.example.mcqapp-drawerlayout-1.1.1-7 C:\Users\PC\.gradle\caches\8.13\transforms\3a592b059c0b33290bf781e74ffcd2bc\transformed\drawerlayout-1.1.1\res
+com.example.mcqapp-coordinatorlayout-1.1.0-8 C:\Users\PC\.gradle\caches\8.13\transforms\4ea924b265c89abdb6beaf500ef90976\transformed\coordinatorlayout-1.1.0\res
+com.example.mcqapp-jetified-fragment-ktx-1.6.1-9 C:\Users\PC\.gradle\caches\8.13\transforms\5653e29e2464eb88f408f350797077fa\transformed\jetified-fragment-ktx-1.6.1\res
+com.example.mcqapp-jetified-savedstate-ktx-1.2.1-10 C:\Users\PC\.gradle\caches\8.13\transforms\574fbfa67a20d2a100b099bd07fff7bf\transformed\jetified-savedstate-ktx-1.2.1\res
+com.example.mcqapp-core-runtime-2.2.0-11 C:\Users\PC\.gradle\caches\8.13\transforms\59227fd9695f98c656185ff3425ef5d7\transformed\core-runtime-2.2.0\res
+com.example.mcqapp-jetified-lifecycle-process-2.6.2-12 C:\Users\PC\.gradle\caches\8.13\transforms\5b3a3e4c3883c659c1c1d2e5273752b0\transformed\jetified-lifecycle-process-2.6.2\res
+com.example.mcqapp-jetified-lifecycle-viewmodel-ktx-2.6.2-13 C:\Users\PC\.gradle\caches\8.13\transforms\5e6c894745bab29797f67c18fe758418\transformed\jetified-lifecycle-viewmodel-ktx-2.6.2\res
+com.example.mcqapp-lifecycle-viewmodel-2.6.2-14 C:\Users\PC\.gradle\caches\8.13\transforms\654b57c480b242c037e835e86dd4cd84\transformed\lifecycle-viewmodel-2.6.2\res
+com.example.mcqapp-jetified-lifecycle-livedata-core-ktx-2.6.2-15 C:\Users\PC\.gradle\caches\8.13\transforms\72ef6b26d8fe8cff9b060593415a9c16\transformed\jetified-lifecycle-livedata-core-ktx-2.6.2\res
+com.example.mcqapp-jetified-lifecycle-runtime-ktx-2.6.2-16 C:\Users\PC\.gradle\caches\8.13\transforms\8b6a8ef2090179a2fea697225ad6d681\transformed\jetified-lifecycle-runtime-ktx-2.6.2\res
+com.example.mcqapp-jetified-activity-1.8.0-17 C:\Users\PC\.gradle\caches\8.13\transforms\91378e2182857dc46b16b6e499f21b52\transformed\jetified-activity-1.8.0\res
+com.example.mcqapp-lifecycle-livedata-2.6.2-18 C:\Users\PC\.gradle\caches\8.13\transforms\97ecf563e6f23a5b2f3ad4ecbbe7d1e8\transformed\lifecycle-livedata-2.6.2\res
+com.example.mcqapp-material-1.12.0-19 C:\Users\PC\.gradle\caches\8.13\transforms\9adad43c561668efe17792a7935cc5c3\transformed\material-1.12.0\res
+com.example.mcqapp-jetified-viewpager2-1.0.0-20 C:\Users\PC\.gradle\caches\8.13\transforms\a295f20bcd46d8cfeaf7092c6f7dd323\transformed\jetified-viewpager2-1.0.0\res
+com.example.mcqapp-jetified-emoji2-1.3.0-21 C:\Users\PC\.gradle\caches\8.13\transforms\aee48e1453ecdc24a4d56ac40709b2fe\transformed\jetified-emoji2-1.3.0\res
+com.example.mcqapp-appcompat-1.7.0-22 C:\Users\PC\.gradle\caches\8.13\transforms\b21a2bad24edab3127bdf600c9ee35fb\transformed\appcompat-1.7.0\res
+com.example.mcqapp-jetified-annotation-experimental-1.4.1-23 C:\Users\PC\.gradle\caches\8.13\transforms\c0f7f232bd4aa6374275883e8cf7a27c\transformed\jetified-annotation-experimental-1.4.1\res
+com.example.mcqapp-jetified-core-ktx-1.15.0-24 C:\Users\PC\.gradle\caches\8.13\transforms\c7155a6d7a1e7ce9bb358c6988b01735\transformed\jetified-core-ktx-1.15.0\res
+com.example.mcqapp-jetified-profileinstaller-1.3.1-25 C:\Users\PC\.gradle\caches\8.13\transforms\ccb4380e7805a73a382f4500830e38ca\transformed\jetified-profileinstaller-1.3.1\res
+com.example.mcqapp-jetified-lifecycle-viewmodel-savedstate-2.6.2-26 C:\Users\PC\.gradle\caches\8.13\transforms\cf72fa82ab502114a23db7173fd1243b\transformed\jetified-lifecycle-viewmodel-savedstate-2.6.2\res
+com.example.mcqapp-jetified-appcompat-resources-1.7.0-27 C:\Users\PC\.gradle\caches\8.13\transforms\e0efda3b778d055a38648a0fc33b1b7a\transformed\jetified-appcompat-resources-1.7.0\res
+com.example.mcqapp-jetified-startup-runtime-1.1.1-28 C:\Users\PC\.gradle\caches\8.13\transforms\ea045f3fcbcfff65acad583be71adda4\transformed\jetified-startup-runtime-1.1.1\res
+com.example.mcqapp-jetified-savedstate-1.2.1-29 C:\Users\PC\.gradle\caches\8.13\transforms\ee4f42f6162f39f057047a4ba0572a46\transformed\jetified-savedstate-1.2.1\res
+com.example.mcqapp-jetified-tracing-1.2.0-30 C:\Users\PC\.gradle\caches\8.13\transforms\f18f73c47b9f06386c191f95a72edfb7\transformed\jetified-tracing-1.2.0\res
+com.example.mcqapp-core-1.15.0-31 C:\Users\PC\.gradle\caches\8.13\transforms\f49ae7cd948b1d7297ca52c1467233d7\transformed\core-1.15.0\res
+com.example.mcqapp-lifecycle-livedata-core-2.6.2-32 C:\Users\PC\.gradle\caches\8.13\transforms\fa6edfdc84c5042dcc0790956b7f6950\transformed\lifecycle-livedata-core-2.6.2\res
+com.example.mcqapp-transition-1.5.0-33 C:\Users\PC\.gradle\caches\8.13\transforms\fe769b629fd17e1380422bcedd8d6ac5\transformed\transition-1.5.0\res
+com.example.mcqapp-pngs-34 D:\Users\ALL WORKS\mcq_android_app\app\build\generated\res\pngs\debug
+com.example.mcqapp-resValues-35 D:\Users\ALL WORKS\mcq_android_app\app\build\generated\res\resValues\debug
+com.example.mcqapp-updated_navigation_xml-36 D:\Users\ALL WORKS\mcq_android_app\app\build\generated\updated_navigation_xml\debug
+com.example.mcqapp-packageDebugResources-37 D:\Users\ALL WORKS\mcq_android_app\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.example.mcqapp-packageDebugResources-38 D:\Users\ALL WORKS\mcq_android_app\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.example.mcqapp-debug-39 D:\Users\ALL WORKS\mcq_android_app\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.example.mcqapp-debug-40 D:\Users\ALL WORKS\mcq_android_app\app\src\debug\res
+com.example.mcqapp-main-41 D:\Users\ALL WORKS\mcq_android_app\app\src\main\res

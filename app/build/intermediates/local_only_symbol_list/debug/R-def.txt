@@ -1,0 +1,7 @@
+R_DEF: Internal format may change without notice
+local
+color mcq_accent
+color mcq_primary
+color mcq_primary_dark
+drawable ic_quiz_hero
+style AppTheme

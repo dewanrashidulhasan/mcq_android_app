@@ -17,7 +17,10 @@ class McqRepository(private val dbHelper: McqDatabase) {
             put("password_hash", BCrypt.hashpw(password, BCrypt.gensalt(12)))
             put("role", role)
         }
-        runCatching { dbHelper.writableDatabase.insertOrThrow("users", null, values) > 0 }.getOrDefault(false)
+        runCatching {
+            val db = dbHelper.writableDatabase
+            db.insertOrThrow("users", null, values) > 0
+        }.getOrDefault(false)
     }
 
     suspend fun login(username: String, password: String): User? = withContext(Dispatchers.IO) {
@@ -35,7 +38,10 @@ class McqRepository(private val dbHelper: McqDatabase) {
     suspend fun addSubject(name: String): Boolean = withContext(Dispatchers.IO) {
         if (name.isBlank()) return@withContext false
         val values = ContentValues().apply { put("name", name.trim()) }
-        runCatching { dbHelper.writableDatabase.insertOrThrow("subjects", null, values) > 0 }.getOrDefault(false)
+        runCatching {
+            val db = dbHelper.writableDatabase
+            db.insertOrThrow("subjects", null, values) > 0
+        }.getOrDefault(false)
     }
 
     suspend fun getSubjects(): List<SubjectItem> = withContext(Dispatchers.IO) {
@@ -56,8 +62,7 @@ class McqRepository(private val dbHelper: McqDatabase) {
 
     suspend fun getStudentCount(): Int = withContext(Dispatchers.IO) {
         dbHelper.readableDatabase.rawQuery("SELECT COUNT(*) FROM users WHERE role = 'student'", null).use { cursor ->
-            cursor.moveToFirst()
-            cursor.getInt(0)
+            if (cursor.moveToFirst()) cursor.getInt(0) else 0
         }
     }
 
@@ -83,8 +88,7 @@ class McqRepository(private val dbHelper: McqDatabase) {
 
     suspend fun getResultCountForUser(userId: Long): Int = withContext(Dispatchers.IO) {
         dbHelper.readableDatabase.rawQuery("SELECT COUNT(*) FROM exam_results WHERE user_id = ?", arrayOf(userId.toString())).use { cursor ->
-            cursor.moveToFirst()
-            cursor.getInt(0)
+            if (cursor.moveToFirst()) cursor.getInt(0) else 0
         }
     }
 
@@ -126,10 +130,7 @@ class McqRepository(private val dbHelper: McqDatabase) {
             arrayOf(userId.toString())
         ).use { cursor ->
             while (cursor.moveToNext()) {
-                results += SubjectItem(cursor.getLong(0), cursor.getString(0)).let {
-                    // We just need the subject name and the percent
-                    cursor.getString(0) to cursor.getDouble(1)
-                }
+                results += (cursor.getString(0) to cursor.getDouble(1))
             }
         }
         results
@@ -149,11 +150,17 @@ class McqRepository(private val dbHelper: McqDatabase) {
             put("option_d", options[3].trim())
             put("correct_option", normalizedCorrect)
         }
-        runCatching { dbHelper.writableDatabase.insertOrThrow("questions", null, values) > 0 }.getOrDefault(false)
+        runCatching {
+            val db = dbHelper.writableDatabase
+            db.insertOrThrow("questions", null, values) > 0
+        }.getOrDefault(false)
     }
 
     suspend fun deleteQuestion(questionId: Long): Boolean = withContext(Dispatchers.IO) {
-        dbHelper.writableDatabase.delete("questions", "id = ?", arrayOf(questionId.toString())) > 0
+        runCatching {
+            val db = dbHelper.writableDatabase
+            db.delete("questions", "id = ?", arrayOf(questionId.toString())) > 0
+        }.getOrDefault(false)
     }
 
     suspend fun getQuestions(subjectId: Long): List<Question> = withContext(Dispatchers.IO) {
@@ -171,7 +178,7 @@ class McqRepository(private val dbHelper: McqDatabase) {
                 questions += Question(
                     cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getString(3),
                     cursor.getString(4), cursor.getString(5), cursor.getString(6)
-                }
+                )
             }
         }
         questions
@@ -186,22 +193,23 @@ class McqRepository(private val dbHelper: McqDatabase) {
             put("correct", correct)
             put("percent", percent)
         }
-        dbHelper.writableDatabase.insert("exam_results", null, values)
+        runCatching {
+            val db = dbHelper.writableDatabase
+            db.insert("exam_results", null, values)
+        }
         percent
     }
 
     private fun countRows(tableName: String): Int {
         return dbHelper.readableDatabase.rawQuery("SELECT COUNT(*) FROM $tableName", null).use { cursor ->
-            cursor.moveToFirst()
-            cursor.getInt(0)
+            if (cursor.moveToFirst()) cursor.getInt(0) else 0
         }
     }
 
     suspend fun seedAdminData() = withContext(Dispatchers.IO) {
         val db = dbHelper.writableDatabase
         val count = db.rawQuery("SELECT COUNT(*) FROM users", null).use {
-            it.moveToFirst()
-            it.getInt(0)
+            if (it.moveToFirst()) it.getInt(0) else 0
         }
         if (count == 0) {
             val adminValues = ContentValues().apply {
