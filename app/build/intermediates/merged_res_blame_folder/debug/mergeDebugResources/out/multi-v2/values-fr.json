@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.mcqapp-mergeDebugResources-36:/values-fr/values-fr.xml",
+            "outputFile": "com.example.mcqapp-mergeDebugResources-37:/values-fr/values-fr.xml",
             "map": [
                 {
                     "source": "C:\\Users\\PC\\.gradle\\caches\\8.13\\transforms\\f49ae7cd948b1d7297ca52c1467233d7\\transformed\\core-1.15.0\\res\\values-fr\\values-fr.xml",

@@ -1,53 +1,59 @@
-# MCQ Pro - Competition-Ready Offline Quiz App
+# SPEC MCQ - Professional Offline Quiz & Contest Platform
 
-MCQ Pro is a comprehensive offline Multiple Choice Question (MCQ) application designed for students and educators. It provides a structured environment for creating question banks, conducting exams, and tracking student performance with role-based access control.
-
-## 🚀 Features
-
-### 🎓 Student Portal
-- **Secure Onboarding**: User registration and secure login system.
-- **Subject-Based Exams**: Browse available subjects and load specific question papers.
-- **Interactive Quiz Interface**: 
-  - Clean, modern UI for answering multiple-choice questions.
-  - Support for 4-option formats (A, B, C, D).
-- **Instant Grading**: 
-  - Automatic score calculation upon submission.
-  - Percentage-based performance analysis.
-  - Motivational feedback based on score tiers (Excellent, Good, Practice, etc.).
-- **History Tracking**: Exam results are persisted in the local database for future reference.
-
-### 🛠️ Admin Dashboard (Teacher Mode)
-- **Global Statistics**: At-a-glance view of total subjects, questions, and registered students.
-- **Course Management**: 
-  - Create and manage multiple subjects/courses.
-  - Seamlessly switch between subjects to manage their respective question banks.
-- **Question Bank Management**:
-  - **Bulk Addition**: Add multiple questions simultaneously with options and correct answers.
-  - **Precise Deletion**: Remove outdated or incorrect questions from the bank.
-- **Student Performance Analytics**:
-  - Comprehensive list of all registered students.
-  - Detailed subject-wise mark sheets for individual student tracking.
-- **Exam Reporting**: High-level overview of subject reports.
-
-## 🔐 Security & Access
-- **Role-Based Access Control (RBAC)**: Distinct interfaces and permissions for `Admin` and `Student` roles.
-- **Secure Authentication**: Implementation of bcrypt password hashing to ensure user data privacy.
-- **Offline Architecture**: All data is stored locally, ensuring the app works without internet connectivity.
-
-## 🛠️ Technical Stack
-- **Language**: Kotlin
-- **Platform**: Android
-- **Database**: SQLite (via custom helper classes)
-- **UI Framework**: Android XML with Material Design components
-- **Architecture**: MVVM (Model-View-ViewModel) for separation of concerns
-
-## 📖 Getting Started
-1. Clone the repository.
-2. Open the project in Android Studio.
-3. Build and run on an Android emulator or physical device.
-4. **Default Admin Credentials**: 
-   - **Username**: `admin`
-   - **Password**: `admin123`
+**SPEC MCQ** একটি আধুনিক এবং শক্তিশালী অ্যান্ড্রয়েড অ্যাপ্লিকেশন, যা শিক্ষক এবং শিক্ষার্থীদের মধ্যে একটি ডিজিটাল পরীক্ষার সেতুবন্ধন তৈরি করে। এই অ্যাপটি বিশেষভাবে ডিজাইন করা হয়েছে যাতে অফলাইন পরিবেশে (লোকাল ডাটাবেস ব্যবহার করে) প্রফেশনাল লেভেলের প্রতিযোগিতা বা কনটেস্ট আয়োজন করা যায়।
 
 ---
-*Designed for speed, accuracy, and efficiency in competition preparation.*
+
+## 🚀 মূল বৈশিষ্ট্যসমূহ (Key Capabilities)
+
+এই অ্যাপ্লিকেশনটির সক্ষমতাকে প্রধানত দুটি ভাগে ভাগ করা যায়:
+
+### ১. শিক্ষক প্যানেল (Teacher/Admin Panel) - "ম্যানেজমেন্ট পাওয়ারহাউস"
+শিক্ষকরা এই প্যানেলের মাধ্যমে পূর্ণ নিয়ন্ত্রণ বজায় রাখতে পারেন:
+*   **মাল্টি-অ্যাডমিন সুবিধা:** প্রত্যেক শিক্ষক নিজস্ব ইউজারনেম দিয়ে একাউন্ট খুলে নিজের আলাদা ড্যাশবোর্ড ব্যবহার করতে পারেন। একজনের ডাটা অন্যজন দেখতে পাবে না।
+*   **কনটেস্ট মোড (Contest Mode):** যেকোনো সাবজেক্টকে সাধারণ পরীক্ষা থেকে "লাইভ কনটেস্ট"-এ রূপান্তর করার ক্ষমতা।
+    *   **শিডিউলিং:** সরাসরি ক্যালেন্ডার এবং ডিজিটাল ঘড়ি (AM/PM সহ) ব্যবহার করে পরীক্ষার তারিখ ও সময় নির্ধারণ।
+    *   **টাইমার নিয়ন্ত্রণ:** পরীক্ষার জন্য নির্দিষ্ট ডিউরেশন (মিনিট) সেট করার সুবিধা।
+*   **রিয়েল-টাইম রিমাইন্ডার (Dynamic Reminders):** 
+    *   পরীক্ষা শুরুর আগে শিক্ষার্থীদের ফোনে নোটিফিকেশন পাঠানোর ব্যবস্থা।
+    *   সিস্টেম অটোমেটিক হিসাব করে বলে দেয় পরীক্ষা শুরু হতে আর কত মিনিট বাকি আছে।
+*   **বিস্তারিত রিপোর্ট ও অ্যানালিটিক্স:** 
+    *   কোন শিক্ষার্থী কত নম্বর পেয়েছে তা পার্সেন্টেজ (%) আকারে দেখা।
+    *   **ড্রপডাউন রিভিউ:** শিক্ষার্থীর রেজাল্টে ক্লিক করলে সে কোন প্রশ্নে কী ভুল করেছে এবং সঠিক উত্তর কী ছিল তা বিস্তারিত দেখার ক্ষমতা।
+*   **প্রশ্ন ব্যাংক ম্যানেজমেন্ট:** বাল্ক আকারে প্রশ্ন যোগ করা, এডিট করা এবং ডিলিট করার সহজ ইন্টারফেস।
+
+---
+
+### ২. শিক্ষার্থী পোর্টাল (Student Portal) - "ইউজার-ফ্রেন্ডলি ইন্টারফেস"
+শিক্ষার্থীদের জন্য এটি একটি সহজ এবং অংশগ্রহণমূলক প্ল্যাটফর্ম:
+*   **সহজ সার্চ সিস্টেম:** কোনো জটিল আইডি ছাড়াই শুধুমাত্র টিচারের দেওয়া **Subject Code** (যেমন: `PHY101`) লিখে পরীক্ষা খুঁজে বের করা।
+*   **স্মার্ট রেজিস্ট্রেশন:** আগাম কনটেস্টের জন্য রেজিস্ট্রেশন করে রাখার সুবিধা। পরীক্ষা লাইভ থাকলে সরাসরি জয়েন করার সুযোগ।
+*   **লাইভ কাউন্টডাউন টাইমার:** পরীক্ষা চলাকালীন স্ক্রিনের উপরে রিয়েল-টাইম ঘড়ি চলে, যা সময় কমে এলে লাল হয়ে সতর্ক করে।
+*   **অটোমেটিক সাবমিশন:** সময় শেষ হওয়ার সাথে সাথে শিক্ষার্থীর খাতা স্বয়ংক্রিয়ভাবে ডাটাবেসে সেভ হয়ে যায়।
+*   **নোটিফিকেশন সেন্টার (Bell Icon):** টিচারের পাঠানো সব রিমাইন্ডার এবং পরীক্ষার ফলাফল এক জায়গায় পাওয়ার সুবিধা।
+*   **রেজিস্টার্ড কনটেস্ট হাব:** শিক্ষার্থী কোন কোন পরীক্ষায় অংশ নিয়েছে তার একটি সুন্দর তালিকা (লাল/সবুজ স্ট্যাটাসসহ) দেখার ক্ষমতা।
+
+---
+
+## 🛠 প্রযুক্তিগত সক্ষমতা (Technical Stack)
+
+*   **Language:** Kotlin (Modern Android standard)
+*   **UI Architecture:** Jetpack ViewModel & StateFlow (রিয়েল-টাইম ডাটা আপডেটের জন্য)।
+*   **Database:** SQLite (Version 4) - সম্পূর্ণ অফলাইন এবং হাই-স্পিড ডাটা স্টোরেজ।
+*   **Security:** 
+    *   **BCrypt Password Hashing:** পাসওয়ার্ড সম্পূর্ণ এনক্রিপ্টেড অবস্থায় থাকে।
+    *   **Role-based Access:** টিচার এবং স্টুডেন্টদের জন্য আলাদা আলাদা সিকিউরিটি লেভেল।
+*   **UI Components:** Material Design 3, custom gradients, এবং প্রফেশনাল কার্ড-বেসড লেআউট।
+
+---
+
+## 📊 প্রোজেক্ট রিপোর্টের জন্য ব্যবহারের গাইডলাইন
+
+এই অ্যাপটি যে কোনো প্রোজেক্ট রিপোর্টে নিচের পয়েন্টগুলোর মাধ্যমে হাইলাইট করা যাবে:
+1.  **Efficiency:** অফলাইনে ডাটা হ্যান্ডেল করার কারণে ইন্টারনেটের প্রয়োজন নেই।
+2.  **Scalability:** এটি স্কুল, কলেজ বা প্রাইভেট কোচিং—যেকোনো জায়গায় ব্যবহারযোগ্য।
+3.  **User Experience:** ক্যালেন্ডার পিকার এবং টাইম পিকারের মতো আধুনিক এলিমেন্ট ব্যবহারের মাধ্যমে ইউজার ইন্টারফেসকে প্রিমিয়াম করা হয়েছে।
+4.  **Integrity:** অটো-সাবমিশন ফিচারের মাধ্যমে পরীক্ষার স্বচ্ছতা নিশ্চিত করা হয়েছে।
+
+---
+*Developed with focus on Clean Code and Professional UX.*

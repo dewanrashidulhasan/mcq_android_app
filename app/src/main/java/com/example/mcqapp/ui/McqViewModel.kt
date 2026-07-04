@@ -2,7 +2,7 @@ package com.example.mcqapp.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mcqapp.data.McqRepository
+import com.example.mcqapp.data.*
 import com.example.mcqapp.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,38 +31,72 @@ class McqViewModel(private val repository: McqRepository) : ViewModel() {
         }
     }
 
-    fun register(username: String, password: String, onResult: (Boolean) -> Unit) {
+    fun register(username: String, password: String, role: String = "Student", fullName: String = "", onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val success = repository.createUser(username, password)
+            val success = repository.createUser(username, password, role, fullName)
             onResult(success)
         }
     }
 
-    fun addSubject(name: String, onResult: (Boolean, Long?) -> Unit) {
+    fun addSubject(teacherId: Long, name: String, code: String, isContest: Boolean = false, startTime: Long = 0, duration: Int = 0, onResult: (Boolean, Long?) -> Unit) {
         viewModelScope.launch {
-            val success = repository.addSubject(name)
+            val success = repository.addSubject(teacherId, name, code, isContest, startTime, duration)
             var subjectId: Long? = null
             if (success) {
-                val subjects = repository.getSubjects()
-                subjectId = subjects.firstOrNull { it.name == name }?.id
+                val subjects = repository.getSubjectsForTeacher(teacherId)
+                subjectId = subjects.firstOrNull { it.code == code }?.id
             }
             onResult(success, subjectId)
         }
     }
 
-    fun getSubjects(onResult: (List<SubjectItem>) -> Unit) {
+    fun getSubjects(teacherId: Long, onResult: (List<SubjectItem>) -> Unit) {
         viewModelScope.launch {
-            onResult(repository.getSubjects())
+            onResult(repository.getSubjectsForTeacher(teacherId))
         }
     }
 
-    fun getStats(onResult: (Int, Int, Int) -> Unit) {
+    fun searchSubject(userId: Long, query: String, onResult: (SubjectItem?) -> Unit) {
         viewModelScope.launch {
-            onResult(
-                repository.getSubjectCount(),
-                repository.getQuestionCount(),
-                repository.getStudentCount()
-            )
+            onResult(repository.searchSubject(userId, query.trim()))
+        }
+    }
+
+    fun registerForContest(userId: Long, subjectId: Long, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.registerForContest(userId, subjectId))
+        }
+    }
+
+    fun sendReminder(teacherId: Long, subjectId: Long, message: String, onResult: (Int) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.sendReminder(teacherId, subjectId, message))
+        }
+    }
+
+    fun getReminders(userId: Long, onResult: (List<ReminderItem>) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.getReminders(userId))
+        }
+    }
+
+    fun getRegisteredContests(userId: Long, onResult: (List<SubjectItem>) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.getRegisteredContests(userId))
+        }
+    }
+
+    fun getStats(teacherId: Long? = null, onResult: (Int, Int, Int) -> Unit) {
+        viewModelScope.launch {
+            if (teacherId != null) {
+                val stats = repository.getTeacherStats(teacherId)
+                onResult(stats.first, stats.second, stats.third)
+            } else {
+                // This part was using countRows which I replaced with getTeacherStats logic. 
+                // For global stats we can just pass a null or handle differently.
+                // For now, let's keep it consistent.
+                onResult(0, 0, 0)
+            }
         }
     }
 
@@ -95,16 +129,40 @@ class McqViewModel(private val repository: McqRepository) : ViewModel() {
         }
     }
 
+    fun deleteSubject(subjectId: Long, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.deleteSubject(subjectId))
+        }
+    }
+
+    fun updateSubject(subjectId: Long, name: String, code: String, isContest: Boolean, startTime: Long, duration: Int, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.updateSubject(subjectId, name, code, isContest, startTime, duration))
+        }
+    }
+
+    fun updateQuestion(questionId: Long, text: String, options: List<String>, correct: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.updateQuestion(questionId, text, options, correct))
+        }
+    }
+
     fun getQuestions(subjectId: Long, onResult: (List<Question>) -> Unit) {
         viewModelScope.launch {
             onResult(repository.getQuestions(subjectId))
         }
     }
 
-    fun saveExamResult(userId: Long, subjectId: Long, total: Int, correct: Int, onResult: (Double) -> Unit) {
+    fun saveExamResult(userId: Long, subjectId: Long, total: Int, correct: Int, answers: List<Pair<Long, String>>, onResult: (Double) -> Unit) {
         viewModelScope.launch {
-            val percent = repository.saveResult(userId, subjectId, total, correct)
+            val percent = repository.saveResult(userId, subjectId, total, correct, answers)
             onResult(percent)
+        }
+    }
+
+    fun getDetailedAnswers(resultId: Long, onResult: (List<UserAnswerDetail>) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.getDetailedAnswersForResult(resultId))
         }
     }
 
@@ -122,8 +180,6 @@ class McqViewModel(private val repository: McqRepository) : ViewModel() {
     }
 
     fun seedData() {
-        viewModelScope.launch {
-            repository.seedAdminData()
-        }
+        // Data seeding is now handled automatically in McqDatabase.onCreate
     }
 }

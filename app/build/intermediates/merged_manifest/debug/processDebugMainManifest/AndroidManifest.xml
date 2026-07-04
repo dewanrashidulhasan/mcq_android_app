@@ -21,6 +21,7 @@
         android:extractNativeLibs="false"
         android:label="SPEC MCQ"
         android:supportsRtl="true"
+        android:testOnly="true"
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.example.mcqapp.MainActivity"

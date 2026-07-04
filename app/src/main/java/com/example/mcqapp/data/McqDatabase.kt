@@ -12,52 +12,77 @@ import java.util.Locale
 // =============================================================================
 // MCQ Database Class - SQLite Database Handler for Quiz App
 // Total Tables: 4 (users | subjects | questions | exam_results)
-// Total Sample Data: 1 user | 1 subject | 3 questions | 0 exam_results
 // =============================================================================
 
 class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
-    // ===========================================================================
-    // TABLE 1: USERS - Stores user accounts (Admin & Students)
-    // Total Records: 1 (1 Admin, 0 Students)
-    // Fields: id | username | password_hash | role | created_at
-    // Role Values: 'admin' | 'student'
-    // ===========================================================================
     override fun onCreate(db: SQLiteDatabase) {
+        // TABLE 1: USERS
         db.execSQL(
             """
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                full_name TEXT,
                 username TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
-                role TEXT NOT NULL CHECK(role IN ('admin', 'student')),
+                role TEXT NOT NULL,
+                unique_code TEXT UNIQUE,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
             """.trimIndent()
         )
 
-    // ===========================================================================
-    // TABLE 2: SUBJECTS - Stores subject/category names
-    // Total Records: 1 (General Knowledge)
-    // Fields: id | name | created_at
-    // ===========================================================================
+        // TABLE 2: SUBJECTS
         db.execSQL(
             """
             CREATE TABLE subjects (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                teacher_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                subject_code TEXT NOT NULL,
+                is_contest INTEGER DEFAULT 0,
+                start_time INTEGER DEFAULT 0,
+                duration_min INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(teacher_id, subject_code),
+                FOREIGN KEY(teacher_id) REFERENCES users(id) ON DELETE CASCADE
             )
             """.trimIndent()
         )
 
-    // ===========================================================================
-    // TABLE 3: QUESTIONS - Stores MCQ questions with 4 options
-    // Total Records: 3 (Demo questions)
-    // Fields: id | subject_id | question_text | option_a | option_b | option_c | option_d | correct_option | created_at
-    // Correct Option Values: 'A' | 'B' | 'C' | 'D'
-    // Foreign Key: subject_id -> subjects(id)
-    // ===========================================================================
+        // TABLE 6: CONTEST_REGISTRATIONS
+        db.execSQL(
+            """
+            CREATE TABLE contest_registrations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                subject_id INTEGER NOT NULL,
+                registered_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, subject_id),
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+
+        // TABLE 7: REMINDERS/NOTIFICATIONS
+        db.execSQL(
+            """
+            CREATE TABLE reminders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                subject_id INTEGER NOT NULL,
+                message TEXT NOT NULL,
+                type TEXT NOT NULL,
+                is_read INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+
+        // TABLE 3: QUESTIONS
         db.execSQL(
             """
             CREATE TABLE questions (
@@ -75,12 +100,7 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
             """.trimIndent()
         )
 
-    // ===========================================================================
-    // TABLE 4: EXAM_RESULTS - Stores user exam attempt results
-    // Total Records: 0 (No exams taken yet)
-    // Fields: id | user_id | subject_id | total | correct | percent | submitted_at
-    // Foreign Keys: user_id -> users(id) | subject_id -> subjects(id)
-    // ===========================================================================
+        // TABLE 4: EXAM_RESULTS
         db.execSQL(
             """
             CREATE TABLE exam_results (
@@ -96,10 +116,27 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
             )
             """.trimIndent()
         )
+
+        // TABLE 5: USER_ANSWERS - Stores individual question responses
+        db.execSQL(
+            """
+            CREATE TABLE user_answers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                result_id INTEGER NOT NULL,
+                question_id INTEGER NOT NULL,
+                selected_option TEXT NOT NULL,
+                is_correct INTEGER NOT NULL,
+                FOREIGN KEY(result_id) REFERENCES exam_results(id) ON DELETE CASCADE,
+                FOREIGN KEY(question_id) REFERENCES questions(id) ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
         seedInitialData(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        // For this modernization phase, we reset the DB to apply the new schema.
+        db.execSQL("DROP TABLE IF EXISTS user_answers")
         db.execSQL("DROP TABLE IF EXISTS exam_results")
         db.execSQL("DROP TABLE IF EXISTS questions")
         db.execSQL("DROP TABLE IF EXISTS subjects")
@@ -107,51 +144,28 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
         onCreate(db)
     }
 
-    // ===========================================================================
-    // SEED DATA - Initial sample data for demo/testing
-    // Creates: 1 Admin User | 1 Subject | 3 Questions
-    // ===========================================================================
     private fun seedInitialData(db: SQLiteDatabase) {
+        // Seed Super Admin
+        val superAdminValues = ContentValues().apply {
+            put("full_name", "System Super Admin")
+            put("username", "superadmin")
+            put("password_hash", BCrypt.hashpw("superadmin123", BCrypt.gensalt(12)))
+            put("role", "SuperAdmin")
+        }
+        db.insert("users", null, superAdminValues)
 
-        // --- USER SEED: 1 Admin Account ---
-        // Username: admin | Password: admin123 (BCrypt hashed)
-        // Role: admin
+        // Seed Default Admin
         val adminValues = ContentValues().apply {
+            put("full_name", "Default Admin")
             put("username", "admin")
             put("password_hash", BCrypt.hashpw("admin123", BCrypt.gensalt(12)))
-            put("role", "admin")
+            put("role", "Admin")
         }
         db.insert("users", null, adminValues)
-
-        // --- SUBJECT SEED: 1 Subject ---
-        // Name: General Knowledge
-        val subjectValues = ContentValues().apply { put("name", "General Knowledge") }
-        val subjectId = db.insert("subjects", null, subjectValues)
-
-        // --- QUESTIONS SEED: 3 Demo Questions ---
-        // Question Format: [question_text, option_a, option_b, option_c, option_d, correct_answer]
-        val demoQuestions = listOf(
-            listOf("Android app কোন ভাষা দিয়ে বানানো যায়?", "Kotlin", "HTML only", "SQL only", "Photoshop", "A"),
-            listOf("SQLite কী ধরনের database?", "Cloud only", "Local relational database", "Image editor", "Operating system", "B"),
-            listOf("MCQ-এর full form কী?", "Multiple Choice Question", "Main Code Query", "Mobile Class Queue", "Modern Cloud Quiz", "A")
-        )
-        demoQuestions.forEach { q ->
-            val values = ContentValues().apply {
-                put("subject_id", subjectId)
-                put("question_text", q[0])
-                put("option_a", q[1])
-                put("option_b", q[2])
-                put("option_c", q[3])
-                put("option_d", q[4])
-                put("correct_option", q[5])
-            }
-            db.insert("questions", null, values)
-        }
     }
 
     companion object {
-        // Database file name stored in: data/data/com.example.mcqapp/databases/mcq_app.db
         private const val DATABASE_NAME = "mcq_app.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 4
     }
 }
