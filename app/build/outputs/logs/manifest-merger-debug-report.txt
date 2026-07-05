@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:2:1-17:12
-INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:2:1-17:12
-INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:2:1-17:12
-INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:2:1-17:12
+ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:2:1-19:12
+INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:2:1-19:12
+INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:2:1-19:12
+INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:2:1-19:12
 MERGED from [com.google.android.material:material:1.12.0] C:\Users\PC\.gradle\caches\8.13\transforms\9adad43c561668efe17792a7935cc5c3\transformed\material-1.12.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.appcompat:appcompat-resources:1.7.0] C:\Users\PC\.gradle\caches\8.13\transforms\e0efda3b778d055a38648a0fc33b1b7a\transformed\jetified-appcompat-resources-1.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] C:\Users\PC\.gradle\caches\8.13\transforms\0e2a766026b37a250a28e86657713a92\transformed\constraintlayout-2.0.1\AndroidManifest.xml:2:1-11:12
@@ -61,8 +61,8 @@ MERGED from [androidx.annotation:annotation-experimental:1.4.1] C:\Users\PC\.gra
 	xmlns:android
 		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:2:11-69
 application
-ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:3:5-16:19
-INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:3:5-16:19
+ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:3:5-18:19
+INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:3:5-18:19
 MERGED from [com.google.android.material:material:1.12.0] C:\Users\PC\.gradle\caches\8.13\transforms\9adad43c561668efe17792a7935cc5c3\transformed\material-1.12.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.12.0] C:\Users\PC\.gradle\caches\8.13\transforms\9adad43c561668efe17792a7935cc5c3\transformed\material-1.12.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] C:\Users\PC\.gradle\caches\8.13\transforms\0e2a766026b37a250a28e86657713a92\transformed\constraintlayout-2.0.1\AndroidManifest.xml:9:5-20
@@ -84,29 +84,33 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\PC
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.15.0] C:\Users\PC\.gradle\caches\8.13\transforms\f49ae7cd948b1d7297ca52c1467233d7\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:6:9-35
+		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:8:9-35
 	android:label
-		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:5:9-33
+		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:7:9-33
+	android:roundIcon
+		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:6:9-48
+	android:icon
+		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:5:9-43
 	android:allowBackup
 		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:4:9-36
 	android:theme
-		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:7:9-40
+		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:9:9-40
 activity#com.example.mcqapp.MainActivity
-ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:8:9-15:20
+ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:10:9-17:20
 	android:exported
-		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:10:13-36
+		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:12:13-36
 	android:name
-		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:9:13-41
+		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:11:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:11:13-14:29
+ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:13:13-16:29
 action#android.intent.action.MAIN
-ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:12:17-69
+ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:14:17-69
 	android:name
-		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:12:25-66
+		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:14:25-66
 category#android.intent.category.LAUNCHER
-ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:13:17-77
+ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:15:17-77
 	android:name
-		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:13:27-74
+		ADDED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml:15:27-74
 uses-sdk
 INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from D:\Users\ALL WORKS\mcq_android_app\app\src\main\AndroidManifest.xml

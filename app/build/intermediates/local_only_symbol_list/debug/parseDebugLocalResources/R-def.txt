@@ -4,4 +4,5 @@ color mcq_accent
 color mcq_primary
 color mcq_primary_dark
 drawable ic_quiz_hero
+drawable spec_logo
 style AppTheme

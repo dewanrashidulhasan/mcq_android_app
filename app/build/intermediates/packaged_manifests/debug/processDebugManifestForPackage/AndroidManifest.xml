@@ -19,9 +19,10 @@
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:debuggable="true"
         android:extractNativeLibs="false"
+        android:icon="@drawable/spec_logo"
         android:label="SPEC MCQ"
+        android:roundIcon="@drawable/spec_logo"
         android:supportsRtl="true"
-        android:testOnly="true"
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.example.mcqapp.MainActivity"

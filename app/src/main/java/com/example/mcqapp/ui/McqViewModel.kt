@@ -1,5 +1,6 @@
 package com.example.mcqapp.ui
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mcqapp.data.*
@@ -8,16 +9,65 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class McqViewModel(private val repository: McqRepository) : ViewModel() {
+class McqViewModel(private val repository: McqRepository, context: Context) : ViewModel() {
 
+    private val prefs = context.getSharedPreferences("mcq_prefs", Context.MODE_PRIVATE)
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser
+
+    init {
+        loadUserSession()
+    }
+
+    private fun loadUserSession() {
+        val id = prefs.getLong("user_id", -1L)
+        if (id != -1L) {
+            val username = prefs.getString("username", null)
+            val role = prefs.getString("role", null)
+            if (username != null && role != null) {
+                _currentUser.value = User(
+                    id = id,
+                    username = username,
+                    fullName = prefs.getString("full_name", "") ?: "",
+                    role = role,
+                    phone = prefs.getString("phone", "") ?: "",
+                    email = prefs.getString("email", "") ?: ""
+                )
+            }
+        }
+    }
 
     private val _currentAdminSubjectId = MutableStateFlow<Long?>(null)
     val currentAdminSubjectId: StateFlow<Long?> = _currentAdminSubjectId
 
     fun setCurrentUser(user: User?) {
         _currentUser.value = user
+        with(prefs.edit()) {
+            if (user != null) {
+                putLong("user_id", user.id)
+                putString("username", user.username)
+                putString("full_name", user.fullName)
+                putString("role", user.role)
+                putString("phone", user.phone)
+                putString("email", user.email)
+            } else {
+                clear()
+            }
+            apply()
+        }
+    }
+
+    fun updateUserProfile(userId: Long, phone: String, email: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = repository.updateUserProfile(userId, phone, email)
+            if (success) {
+                val current = _currentUser.value
+                if (current != null && current.id == userId) {
+                    setCurrentUser(current.copy(phone = phone, email = email))
+                }
+            }
+            onResult(success)
+        }
     }
 
     fun setCurrentAdminSubjectId(id: Long?) {

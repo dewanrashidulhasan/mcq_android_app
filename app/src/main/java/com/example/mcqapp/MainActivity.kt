@@ -29,17 +29,20 @@ data class QuestionDraftViews(
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: McqViewModel
     private var currentAdminSubjectId: Long? = null
+    private var lastBackPressTime: Long = 0
 
-    private val primary = Color.parseColor("#6C5CE7")
-    private val primaryDark = Color.parseColor("#201A52")
-    private val accent = Color.parseColor("#00D2D3")
-    private val success = Color.parseColor("#00B894")
-    private val danger = Color.parseColor("#FF7675")
-    private val warning = Color.parseColor("#FDCB6E")
-    private val ink = Color.parseColor("#17202A")
-    private val muted = Color.parseColor("#6B7280")
+    // Modern Color Palette
+    private val primary = Color.parseColor("#4338CA") // Indigo 700
+    private val primaryLight = Color.parseColor("#EEF2FF") // Indigo 50
+    private val primaryDark = Color.parseColor("#312E81") // Indigo 900
+    private val accent = Color.parseColor("#0ea5e9") // Sky 500
+    private val success = Color.parseColor("#10b981") // Emerald 500
+    private val danger = Color.parseColor("#f43f5e") // Rose 500
+    private val warning = Color.parseColor("#f59e0b") // Amber 500
+    private val ink = Color.parseColor("#0f172a") // Slate 900
+    private val muted = Color.parseColor("#64748b") // Slate 500
     private val surface = Color.WHITE
-    private val softSurface = Color.parseColor("#F6F7FB")
+    private val softSurface = Color.parseColor("#f8fafc") // Slate 50
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,21 +53,31 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return McqViewModel(repository) as T
+                return McqViewModel(repository, applicationContext) as T
             }
         }).get(McqViewModel::class.java)
 
         viewModel.seedData()
-        showLoginScreen()
+        
+        val user = viewModel.currentUser.value
+        if (user != null) {
+            if (user.role == "Student") showExamScreen() else showAdminPanel()
+        } else {
+            showLoginScreen()
+        }
     }
 
     @Suppress("DEPRECATION")
     override fun onBackPressed() {
         val user = viewModel.currentUser.value
         if (user != null) {
-            toast("Log out না করা পর্যন্ত অ্যাপ থেকে বের হওয়া যাবে না।")
-            // Instead of super.onBackPressed(), we do nothing or return to the main dashboard
-            if (user.role == "Student") showExamScreen() else showAdminPanel()
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - lastBackPressTime < 2000) {
+                finish() // Exit app without logout
+            } else {
+                lastBackPressTime = currentTime
+                toast("Press again to exit SPEC MCQ")
+            }
         } else {
             super.onBackPressed()
         }
@@ -80,7 +93,7 @@ class MainActivity : AppCompatActivity() {
         val password = input("Password", password = true)
         
         val root = screenRoot()
-        root.addView(heroCard("MCQ Pro", "Competition-ready offline quiz app", "Secure Login", true))
+        root.addView(heroCard("SPEC MCQ", "Empowering Your Academic Journey", "Modern Exam System", true))
         
         root.addView(
             card().apply {
@@ -106,10 +119,21 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 })
+
+                val forgetPass = TextView(this@MainActivity).apply {
+                    text = "Forget Password?"
+                    textSize = 14f
+                    setTextColor(primary)
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    setPadding(0, dp(15), 0, dp(5))
+                    setOnClickListener { toast("Feature coming soon!") }
+                }
+                addView(forgetPass)
                 
                 addView(View(this@MainActivity).apply { 
                     layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1)).apply { 
-                        setMargins(0, dp(25), 0, dp(15))
+                        setMargins(0, dp(20), 0, dp(15))
                     }
                     setBackgroundColor(Color.parseColor("#E2E8F0"))
                 })
@@ -135,7 +159,6 @@ class MainActivity : AppCompatActivity() {
                 })
                 
                 addView(regLayout)
-                addView(infoStrip("Admin Demo", "admin / admin123", warning))
             }
         )
         setContentView(scroll(root))
@@ -147,7 +170,7 @@ class MainActivity : AppCompatActivity() {
         val password = input("Password", password = true)
         
         val root = screenRoot()
-        root.addView(heroCard("Register", "Create a new $role account", role, false))
+        root.addView(heroCard("Register", "Create a new $role account", "SPEC MCQ Join", false))
         
         root.addView(
             card().apply {
@@ -192,23 +215,23 @@ class MainActivity : AppCompatActivity() {
                 currentAdminSubjectId = selectedSubject?.id
                 val root = screenRoot()
 
-                // Navigation Bar
+                // Modern Navigation Bar
                 val navBar = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(dp(18), dp(10), dp(18), dp(10))
-                    background = round(primaryDark, dp(20).toFloat())
-                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(60))
+                    background = round(primaryDark, dp(16).toFloat())
+                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(65))
 
-                    addView(text("Admin Panel", 16f, true, Color.WHITE, Gravity.START))
+                    addView(text("SPEC MCQ Admin", 17f, true, Color.WHITE, Gravity.START))
 
                     val reminderIcon = TextView(this@MainActivity).apply {
                         text = "🔔 Reminders"
-                        textSize = 14f
+                        textSize = 13f
                         setTextColor(Color.WHITE)
                         typeface = Typeface.DEFAULT_BOLD
-                        setPadding(dp(12), dp(4), dp(12), dp(4))
-                        background = round(Color.parseColor("#3F37B3"), dp(12).toFloat())
+                        setPadding(dp(12), dp(6), dp(12), dp(6))
+                        background = round(Color.parseColor("#4338CA"), dp(12).toFloat())
                         setOnClickListener { showReminderManagementPage() }
                     }
 
@@ -219,8 +242,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 root.addView(navBar)
 
-                val subTitle = "Admin Mode"
-                root.addView(heroCard(user.username, subTitle, user.role, false))
+                root.addView(heroCard(user.username, "Admin Dashboard", user.role, false))
 
                 viewModel.getStats(user.id) { sCount, qCount, stCount ->
                     runOnUiThread {
@@ -233,15 +255,16 @@ class MainActivity : AppCompatActivity() {
                 val contestSwitch = CheckBox(this@MainActivity).apply {
                     text = "Enable Contest Mode"
                     setTextColor(ink)
-                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) }
+                    buttonTintList = ColorStateList.valueOf(primary)
+                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(10) }
                 }
                 val contestLayout = LinearLayout(this@MainActivity).apply {
                     orientation = LinearLayout.VERTICAL
                     visibility = View.GONE
                 }
-                val startTimeInput = input("Start Time (Click to select)")
-                val durationInput = input("Duration (Minutes, e.g. 60)")
-                val dateInput = input("Start Date (Click to select)")
+                val startTimeInput = input("Start Time")
+                val durationInput = input("Duration (Minutes)")
+                val dateInput = input("Start Date")
                 
                 val calendar = java.util.Calendar.getInstance()
                 
@@ -260,8 +283,6 @@ class MainActivity : AppCompatActivity() {
                     android.app.TimePickerDialog(this, { _, h, min ->
                         calendar.set(java.util.Calendar.HOUR_OF_DAY, h)
                         calendar.set(java.util.Calendar.MINUTE, min)
-                        calendar.set(java.util.Calendar.SECOND, 0)
-                        calendar.set(java.util.Calendar.MILLISECOND, 0)
                         val amPm = if (h < 12) "AM" else "PM"
                         val h12 = if (h % 12 == 0) 12 else h % 12
                         startTimeInput.setText(String.format(Locale.US, "%02d:%02d %s", h12, min, amPm))
@@ -337,18 +358,120 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun showExamScreen() {
+        val user = viewModel.currentUser.value ?: return showLoginScreen()
+        val searchInput = input("Subject Code (e.g. PHY101)")
+        
+        val root = screenRoot()
+        
+        // Modern Student Header
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(20))
+            
+            val infoLayout = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+                addView(text("Welcome, ${user.fullName}", 20f, true, ink, Gravity.START))
+                addView(text("@${user.username}", 14f, false, muted, Gravity.START))
+            }
+            addView(infoLayout)
+            
+            val bellIcon = TextView(this@MainActivity).apply {
+                text = "🔔"
+                textSize = 22f
+                setPadding(dp(12), dp(8), dp(12), dp(8))
+                setOnClickListener { showNotificationsPage() }
+            }
+            addView(bellIcon)
+
+            val profileIcon = TextView(this@MainActivity).apply {
+                text = "👤"
+                textSize = 22f
+                setPadding(dp(12), dp(8), dp(12), dp(8))
+                setOnClickListener { showProfilePage() }
+            }
+            addView(profileIcon)
+        }
+        root.addView(header)
+
+        root.addView(card().apply {
+            addView(sectionTitle("Find Exam", "সাবজেক্ট কোড দিয়ে সার্চ করুন"))
+            addView(searchInput)
+            addView(primaryButton("Search Now", "🔍") {
+                val query = searchInput.text.toString().trim()
+                viewModel.searchSubject(user.id, query) { subject ->
+                    runOnUiThread {
+                        if (subject != null) {
+                            showContestOrExamInfo(subject)
+                        } else {
+                            toast("Subject পাওয়া যায়নি।")
+                        }
+                    }
+                }
+            })
+            
+            addView(outlineButton("My Registered Contests", "📋") { showRegisteredContestsPage() })
+        })
+        
+        root.addView(dangerButton("Logout", "🚪") { logout() })
+        setContentView(swipeRefresh(root) { showExamScreen() })
+    }
+
+    private fun showProfilePage() {
+        val user = viewModel.currentUser.value ?: return
+        val root = screenRoot()
+        
+        root.addView(heroCard(user.fullName, "Personal Profile Info", "@${user.username}", false))
+        
+        val phoneInput = input("Phone Number").apply { setText(user.phone) }
+        val emailInput = input("Email Address").apply { setText(user.email) }
+        
+        root.addView(card().apply {
+            addView(sectionTitle("Profile Details", "আপনার তথ্য আপডেট করুন"))
+            addView(label("Full Name"))
+            addView(text(user.fullName, 16f, true, ink, Gravity.START))
+            addView(label("Username"))
+            addView(text(user.username, 16f, true, ink, Gravity.START))
+            
+            addView(label("Phone Number"))
+            addView(phoneInput)
+            addView(label("Email"))
+            addView(emailInput)
+            
+            addView(primaryButton("Update Profile", "💾") {
+                val p = phoneInput.text.toString()
+                val e = emailInput.text.toString()
+                viewModel.updateUserProfile(user.id, p, e) { ok ->
+                    runOnUiThread {
+                        if (ok) {
+                            toast("Profile updated successfully!")
+                            showExamScreen()
+                        } else {
+                            toast("Update failed.")
+                        }
+                    }
+                }
+            })
+            
+            addView(outlineButton("Back to Portal", "⬅") { showExamScreen() })
+        })
+        
+        setContentView(scroll(root))
+    }
+
     private fun showReminderManagementPage() {
         val user = viewModel.currentUser.value ?: return
         viewModel.getSubjects(user.id) { subjects ->
             runOnUiThread {
                 val root = screenRoot()
                 
-                // Navigation Bar
                 val navBar = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(dp(18), dp(10), dp(18), dp(10))
-                    background = round(primaryDark, dp(20).toFloat())
+                    background = round(primaryDark, dp(16).toFloat())
                     layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(60))
                     addView(text("Send Reminders", 16f, true, Color.WHITE, Gravity.START))
                     val backBtn = TextView(this@MainActivity).apply {
@@ -357,7 +480,7 @@ class MainActivity : AppCompatActivity() {
                         setTextColor(Color.WHITE)
                         typeface = Typeface.DEFAULT_BOLD
                         setPadding(dp(12), dp(4), dp(12), dp(4))
-                        background = round(Color.parseColor("#3F37B3"), dp(12).toFloat())
+                        background = round(Color.parseColor("#4338CA"), dp(12).toFloat())
                         setOnClickListener { showAdminPanel() }
                     }
                     addView(View(this@MainActivity).apply { layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f) })
@@ -371,49 +494,21 @@ class MainActivity : AppCompatActivity() {
                         val timeStr = java.text.SimpleDateFormat("HH:mm", Locale.US).format(java.util.Date(subject.startTime))
                         addView(text("Scheduled for: $timeStr", 13f, false, muted, Gravity.START))
                         
-                    val reminderBtn = primaryButton("Send Reminder", "🔔") {
-                        // Captured reference to the button
-                    }
-                    reminderBtn.setOnClickListener {
-                        val now = System.currentTimeMillis()
-                        val diff = subject.startTime - now
-                        val mins = (diff / 60000).toInt()
-                        
-                        val msg = if (mins > 0) {
-                            "Contest '${subject.name}' starts in $mins minutes!"
-                        } else if (mins > -subject.durationMin) {
-                            "Contest '${subject.name}' is LIVE now! Join quickly."
-                        } else {
-                            "Contest '${subject.name}' has ended."
-                        }
-
-                        viewModel.sendReminder(user.id, subject.id, msg) { count ->
-                            runOnUiThread {
-                                toast("$count students notified: $msg")
-                                reminderBtn.isEnabled = false
-                                reminderBtn.text = "Wait 60s..."
-                                reminderBtn.postDelayed({ 
-                                    reminderBtn.isEnabled = true
-                                    reminderBtn.text = "🔔  Send Reminder"
-                                }, 60000)
+                        val reminderBtn = primaryButton("Send Reminder", "🔔") {}
+                        reminderBtn.setOnClickListener {
+                            val now = System.currentTimeMillis()
+                            val mins = ((subject.startTime - now) / 60000).toInt()
+                            val msg = if (mins > 0) "Starts in $mins minutes!" else "LIVE now!"
+                            viewModel.sendReminder(user.id, subject.id, "Contest '${subject.name}' $msg") { count ->
+                                runOnUiThread {
+                                    toast("$count students notified.")
+                                    reminderBtn.isEnabled = false
+                                }
                             }
                         }
-                    }
-                    addView(reminderBtn)
-
-                    val publishBtn = outlineButton("Publish Results", "📊") {
-                        viewModel.sendReminder(user.id, subject.id, "Results for '${subject.name}' are now available!") { count ->
-                            runOnUiThread { toast("$count students notified about results.") }
-                        }
-                    }
-                    addView(publishBtn)
+                        addView(reminderBtn)
                     })
                 }
-                
-                if (subjects.none { it.isContest }) {
-                    root.addView(card().apply { addView(text("No contest subjects found.", 14f, false, muted, Gravity.CENTER)) })
-                }
-
                 setContentView(scroll(root))
             }
         }
@@ -425,134 +520,16 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 val root = screenRoot()
                 root.addView(heroCard("My Contests", "আপনার রেজিস্টার্ড সব পরীক্ষা", "Registered", false))
-                
                 contests.forEach { subject ->
-                    val now = System.currentTimeMillis()
-                    val endTime = subject.startTime + (subject.durationMin * 60000)
-                    val isFinished = now > endTime
-                    val isLive = now in subject.startTime..endTime
-                    
                     root.addView(card().apply {
-                        val statusColor = if (isFinished) success else danger
-                        val statusLabel = if (isFinished) "Finished" else if (isLive) "LIVE" else "Upcoming"
-                        
-                        addView(chip(statusLabel, statusColor))
                         addView(sectionTitle(subject.name, "Code: ${subject.code}"))
-                        
-                        val timeStr = java.text.SimpleDateFormat("dd MMM, HH:mm", Locale.US).format(java.util.Date(subject.startTime))
-                        addView(text("Time: $timeStr", 13f, false, muted, Gravity.START))
-
-                        if (isFinished) {
-                            addView(primaryButton("View Result", "📊") {
-                                // Find this specific student's result for this subject
-                                viewModel.getResultsForSubject(subject.id) { allResults ->
-                                    val myResult = allResults.find { it.username == user.username }
-                                    runOnUiThread {
-                                        if (myResult != null) {
-                                            showStudentResultDetail(myResult)
-                                        } else {
-                                            toast("আপনি এই পরীক্ষায় অংশগ্রহণ করেননি।")
-                                        }
-                                    }
-                                }
-                            })
-                        } else {
-                            addView(primaryButton(if (isLive) "Join Now" else "Contest Not Started", "🚀") {
-                                if (isLive) showQuestionPaper(subject) else toast("অনুগ্রহ করে সময় হওয়া পর্যন্ত অপেক্ষা করুন।")
-                            }.apply { isEnabled = isLive })
-                        }
+                        addView(primaryButton("Join Exam", "🚀") { showQuestionPaper(subject) })
                     })
                 }
-                
-                if (contests.isEmpty()) {
-                    root.addView(card().apply { addView(text("No registrations found.", 14f, false, muted, Gravity.CENTER)) })
-                }
-                
                 root.addView(outlineButton("Back", "⬅") { showExamScreen() })
-                setContentView(swipeRefresh(root) { showRegisteredContestsPage() })
+                setContentView(scroll(root))
             }
         }
-    }
-
-    private fun showStudentResultDetail(result: ExamResultRow) {
-        val root = screenRoot()
-        root.addView(heroCard("Result Review", result.username, String.format(Locale.US, "%.2f%%", result.percent), false))
-        
-        val detailsContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(10), dp(10), dp(10), dp(10))
-            background = round(surface, dp(16).toFloat())
-        }
-        
-        viewModel.getDetailedAnswers(result.resultId) { answers ->
-            runOnUiThread {
-                if (answers.isEmpty()) {
-                    detailsContainer.addView(text("বিস্তারিত তথ্য পাওয়া যায়নি।", 14f, false, muted, Gravity.CENTER))
-                } else {
-                    answers.forEach { ans ->
-                        detailsContainer.addView(answerDetailRow(ans))
-                    }
-                }
-            }
-        }
-        
-        root.addView(detailsContainer)
-        root.addView(outlineButton("Back", "⬅") { showRegisteredContestsPage() })
-        setContentView(scroll(root))
-    }
-
-    private fun showExamScreen() {
-        val user = viewModel.currentUser.value ?: return showLoginScreen()
-        val searchInput = input("Subject Code (e.g. PHY101)")
-        
-        val root = screenRoot()
-        
-        // Header with Icons
-        val header = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, 0, 0, dp(15))
-            addView(text("Student Portal", 24f, true, ink, Gravity.START).apply { layoutParams = LinearLayout.LayoutParams(0, -2, 1f) })
-            
-            val regIcon = TextView(this@MainActivity).apply {
-                text = "📋 Registered"
-                textSize = 14f
-                setTextColor(primary)
-                typeface = Typeface.DEFAULT_BOLD
-                setPadding(dp(8), dp(8), dp(8), dp(8))
-                setOnClickListener { showRegisteredContestsPage() }
-            }
-            addView(regIcon)
-
-            val bellIcon = TextView(this@MainActivity).apply {
-                text = "🔔"
-                textSize = 24f
-                setPadding(dp(8), dp(8), dp(8), dp(8))
-                setOnClickListener { showNotificationsPage() }
-            }
-            addView(bellIcon)
-        }
-        root.addView(header)
-
-        root.addView(card().apply {
-            addView(sectionTitle("Search Exam", "সাবজেক্ট কোড দিয়ে সার্চ করুন"))
-            addView(searchInput)
-            addView(primaryButton("Find Subject", "🔍") {
-                val query = searchInput.text.toString().trim()
-                viewModel.searchSubject(user.id, query) { subject ->
-                    runOnUiThread {
-                        if (subject != null) {
-                            showContestOrExamInfo(subject)
-                        } else {
-                            toast("Subject পাওয়া যায়নি। সঠিক সাবজেক্ট কোড প্রদান করুন।")
-                        }
-                    }
-                }
-            })
-        })
-        
-        root.addView(dangerButton("Logout", "🚪") { logout() })
-        setContentView(swipeRefresh(root) { showExamScreen() })
     }
 
     private fun showNotificationsPage() {
@@ -561,79 +538,33 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 val root = screenRoot()
                 root.addView(heroCard("Notifications", "আপনার সব রিমাইন্ডার এবং রেজাল্ট", "Bell Icon", false))
-                
                 reminders.forEach { r ->
                     root.addView(card().apply {
                         addView(text(r.subjectName, 14f, true, primary, Gravity.START))
                         addView(text(r.message, 13f, false, ink, Gravity.START))
-                        addView(text(r.timestamp, 10f, false, muted, Gravity.END))
                     })
                 }
-                
-                if (reminders.isEmpty()) {
-                    root.addView(card().apply { addView(text("No notifications yet.", 14f, false, muted, Gravity.CENTER)) })
-                }
-                
                 root.addView(outlineButton("Back", "⬅") { showExamScreen() })
-                setContentView(swipeRefresh(root) { showRegisteredContestsPage() })
+                setContentView(scroll(root))
             }
         }
     }
 
     private fun showContestOrExamInfo(subject: SubjectItem) {
         val user = viewModel.currentUser.value ?: return
-        val now = System.currentTimeMillis()
-        
-        if (!subject.isContest) {
-            showQuestionPaper(subject)
-            return
-        }
-
-        val contestEndTime = subject.startTime + (subject.durationMin * 60000)
-        
         val root = screenRoot()
         root.addView(heroCard(subject.name, "Contest Mode Enabled", "Duration: ${subject.durationMin}m", false))
-        
         root.addView(card().apply {
-            val statusText: String
-            val showBtn: Boolean
-            val btnLabel: String
-            
-            if (now < subject.startTime) {
-                statusText = "Contest has not started yet."
-                if (subject.isRegistered) {
-                    showBtn = false
-                    btnLabel = ""
-                    addView(infoStrip("Status", "Registered! We will notify you.", success))
-                } else {
-                    showBtn = true
-                    btnLabel = "Register for Contest"
-                }
-            } else if (now < contestEndTime) {
-                statusText = "Contest is LIVE!"
-                showBtn = true
-                btnLabel = "Join Now"
+            addView(sectionTitle("Exam Info", "সাবজেক্ট কোড: ${subject.code}"))
+            if (subject.isRegistered) {
+                addView(primaryButton("Join Now", "🚀") { showQuestionPaper(subject) })
             } else {
-                statusText = "Contest has ended."
-                showBtn = false
-                btnLabel = ""
-                addView(infoStrip("Status", "Result will be published soon.", warning))
-            }
-            
-            addView(sectionTitle("Contest Status", statusText))
-            
-            if (showBtn) {
-                addView(primaryButton(btnLabel, "🚀") {
-                    if (btnLabel == "Register for Contest") {
-                        viewModel.registerForContest(user.id, subject.id) { ok ->
-                            runOnUiThread { if (ok) showContestOrExamInfo(subject.copy(isRegistered = true)) }
-                        }
-                    } else {
-                        showQuestionPaper(subject)
+                addView(primaryButton("Register Now", "📝") {
+                    viewModel.registerForContest(user.id, subject.id) { ok ->
+                        runOnUiThread { if (ok) showExamScreen() }
                     }
                 })
             }
-            
             addView(outlineButton("Back", "⬅") { showExamScreen() })
         })
         setContentView(scroll(root))
@@ -642,57 +573,13 @@ class MainActivity : AppCompatActivity() {
     private fun showQuestionPaper(subject: SubjectItem) {
         viewModel.getQuestions(subject.id) { questions ->
             runOnUiThread {
-                if (questions.isEmpty()) {
-                    toast("এই subject-এ question নেই।")
-                    showExamScreen()
-                    return@runOnUiThread
-                }
                 val root = screenRoot()
-                
-                // Timer Header for Contests
-                var remainingMillis: Long = -1
-                val timerText = text("", 20f, true, danger, Gravity.CENTER)
-                
-                if (subject.isContest) {
-                    val now = System.currentTimeMillis()
-                    val contestEndTime = subject.startTime + (subject.durationMin * 60000)
-                    remainingMillis = contestEndTime - now
-                    if (remainingMillis > 0) {
-                        root.addView(card().apply {
-                            addView(text("Contest Ending In:", 14f, false, muted, Gravity.CENTER))
-                            addView(timerText)
-                        })
-                    }
-                }
-
-                root.addView(heroCard("Exam: ${subject.name}", "সব question answer করে submit করো", "${questions.size} Questions", false))
+                root.addView(heroCard(subject.name, "সব প্রশ্নের উত্তর দিন", "${questions.size} Items", false))
                 val answers = mutableMapOf<Long, RadioGroup>()
-                questions.forEachIndexed { index, q ->
-                    root.addView(questionCard(index + 1, q, answers))
-                }
-                
-                val submitBtn = primaryButton("Submit Exam", "🏁") {
+                questions.forEachIndexed { i, q -> root.addView(questionCard(i + 1, q, answers)) }
+                root.addView(primaryButton("Submit Now", "🏁") {
                     submitExam(subject, questions, answers)
-                }
-                root.addView(submitBtn)
-                
-                // Countdown logic
-                if (remainingMillis > 0) {
-                    val timer = object : android.os.CountDownTimer(remainingMillis, 1000) {
-                        override fun onTick(millisUntilFinished: Long) {
-                            val mins = (millisUntilFinished / 1000) / 60
-                            val secs = (millisUntilFinished / 1000) % 60
-                            timerText.text = String.format(Locale.US, "%02d:%02d", mins, secs)
-                        }
-                        override fun onFinish() {
-                            toast("Time's up! Submitting automatically...")
-                            submitExam(subject, questions, answers)
-                        }
-                    }
-                    timer.start()
-                }
-
-                root.addView(outlineButton("Back to Subjects", "⬅") { showExamScreen() })
+                })
                 setContentView(scroll(root))
             }
         }
@@ -700,43 +587,198 @@ class MainActivity : AppCompatActivity() {
 
     private fun submitExam(subject: SubjectItem, questions: List<Question>, answers: Map<Long, RadioGroup>) {
         var correct = 0
-        val userAnswersList = mutableListOf<Pair<Long, String>>()
-        questions.forEach { q ->
+        val ansList = questions.map { q ->
             val group = answers[q.id]
-            val checked = group?.findViewById<RadioButton>(group.checkedRadioButtonId)
-            val selectedOption = checked?.tag?.toString() ?: ""
-            userAnswersList.add(q.id to selectedOption)
-            if (selectedOption == q.correctOption) correct++
+            val sel = group?.findViewById<RadioButton>(group.checkedRadioButtonId)?.tag?.toString() ?: ""
+            if (sel == q.correctOption) correct++
+            q.id to sel
         }
         val user = viewModel.currentUser.value ?: return
-        viewModel.saveExamResult(user.id, subject.id, questions.size, correct, userAnswersList) { percent ->
-            runOnUiThread {
-                if (subject.isContest) {
-                    toast("Contest submitted! Result will be available in notifications.")
-                    showExamScreen()
-                } else {
-                    showResultScreen(questions.size, correct, percent)
-                }
-            }
+        viewModel.saveExamResult(user.id, subject.id, questions.size, correct, ansList) { percent ->
+            runOnUiThread { showResultScreen(questions.size, correct, percent) }
         }
     }
 
     private fun showResultScreen(total: Int, correct: Int, percent: Double) {
         val root = screenRoot()
-        root.addView(heroCard("Result Published", "তোমার score database-এ save হয়েছে", resultEmoji(percent), false))
-        root.addView(
-            card().apply {
-                val percentText = String.format(Locale.US, "%.2f%%", percent)
-                addView(bigScore(percentText))
-                addView(statsRow(listOf("Total" to total.toString(), "Correct" to correct.toString())))
-                addView(infoStrip("Performance", performanceMessage(percent), if (percent >= 60.0) success else danger))
-            }
-        )
-        root.addView(primaryButton("Take Another Exam", "🔁") { showExamScreen() })
-        root.addView(dangerButton("Logout", "🚪") { logout() })
+        root.addView(heroCard("Result", "Score: ${String.format("%.2f", percent)}%", "Done", false))
+        root.addView(card().apply {
+            addView(bigScore("${String.format("%.1f", percent)}%"))
+            addView(statsRow(listOf("Total" to total.toString(), "Correct" to correct.toString())))
+        })
+        root.addView(primaryButton("Back to Portal", "🔁") { showExamScreen() })
         setContentView(scroll(root))
     }
 
+    // Helper UI Methods
+    private fun screenRoot(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(dp(18), dp(20), dp(18), dp(32))
+        setBackgroundColor(softSurface)
+    }
+
+    private fun card(color: Int = surface): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        elevation = dp(4).toFloat()
+        background = round(color, dp(20).toFloat(), if (color == surface) Color.parseColor("#f1f5f9") else color, dp(1))
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(18) }
+        setPadding(dp(22), dp(22), dp(22), dp(22))
+    }
+
+    private fun heroCard(title: String, subtitle: String, badge: String, showPicture: Boolean): LinearLayout = card(primaryDark).apply {
+        elevation = dp(8).toFloat()
+        val inner = LinearLayout(this@MainActivity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(10), dp(15), dp(10), dp(15))
+            if (showPicture) addView(pictureSection())
+            addView(chip(badge, accent))
+            addView(text(title, 30f, true, Color.WHITE, Gravity.CENTER))
+            addView(text(subtitle, 14f, false, Color.parseColor("#c7d2fe"), Gravity.CENTER))
+        }
+        addView(inner)
+    }
+
+    private fun pictureSection(): FrameLayout = FrameLayout(this).apply {
+        layoutParams = LinearLayout.LayoutParams(dp(160), dp(160)).apply { bottomMargin = dp(20) }
+        
+        // Circular background for the logo
+        val shape = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(Color.WHITE)
+            setStroke(dp(3), primary)
+        }
+        background = shape
+        
+        addView(ImageView(this@MainActivity).apply {
+            setImageResource(R.drawable.spec_logo)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+            layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        })
+    }
+
+    private fun sectionTitle(title: String, subtitle: String): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        addView(text(title, 21f, true, ink, Gravity.START))
+        addView(text(subtitle, 13f, false, muted, Gravity.START))
+    }
+
+    private fun input(hintText: String, password: Boolean = false): EditText = EditText(this).apply {
+        hint = hintText
+        textSize = 15f
+        setTextColor(ink)
+        setHintTextColor(muted)
+        setSingleLine(true)
+        minHeight = dp(58)
+        background = round(surface, dp(14).toFloat(), Color.parseColor("#cbd5e1"), dp(1))
+        setPadding(dp(18), dp(12), dp(18), dp(12))
+        inputType = if (password) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD else InputType.TYPE_CLASS_TEXT
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) }
+    }
+
+    private fun primaryButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, primary, Color.WHITE, action)
+    private fun dangerButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, danger, Color.WHITE, action)
+    private fun outlineButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, Color.TRANSPARENT, primary, action).apply {
+        strokeWidth = dp(1)
+        strokeColor = ColorStateList.valueOf(primary)
+        backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+    }
+
+    private fun fancyButton(label: String, icon: String, bgColor: Int, txtColor: Int, action: () -> Unit): MaterialButton = MaterialButton(this).apply {
+        text = "$icon  $label"
+        textSize = 14f
+        typeface = Typeface.DEFAULT_BOLD
+        isAllCaps = false
+        cornerRadius = dp(14)
+        setTextColor(txtColor)
+        backgroundTintList = ColorStateList.valueOf(bgColor)
+        minHeight = dp(58)
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(15) }
+        setOnClickListener { action() }
+    }
+
+    private fun statsRow(items: List<Pair<String, String>>): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(15) }
+        items.forEachIndexed { i, item ->
+            addView(statBox(item.first, item.second).apply {
+                layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { if (i > 0) leftMargin = dp(10) }
+            })
+        }
+    }
+
+    private fun statBox(label: String, value: String): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        background = round(surface, dp(18).toFloat(), Color.parseColor("#e2e8f0"), dp(1))
+        setPadding(dp(16), dp(16), dp(16), dp(16))
+        addView(text(value, 26f, true, primary, Gravity.CENTER))
+        addView(text(label, 12f, false, muted, Gravity.CENTER))
+    }
+
+    private fun bigScore(value: String): TextView = text(value, 48f, true, primary, Gravity.CENTER).apply {
+        background = round(primaryLight, dp(24).toFloat())
+        setPadding(dp(20), dp(25), dp(20), dp(25))
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(20) }
+    }
+
+    private fun questionCard(num: Int, q: Question, answers: MutableMap<Long, RadioGroup>): LinearLayout = card().apply {
+        addView(chip("Question $num", primary))
+        addView(text(q.text, 18f, true, ink, Gravity.START))
+        val group = RadioGroup(this@MainActivity).apply { orientation = RadioGroup.VERTICAL; setPadding(0, dp(10), 0, 0) }
+        mapOf("A" to q.optionA, "B" to q.optionB, "C" to q.optionC, "D" to q.optionD).forEach { (k, v) ->
+            group.addView(RadioButton(this@MainActivity).apply {
+                text = "$k. $v"
+                tag = k
+                textSize = 15f
+                setTextColor(ink)
+                buttonTintList = ColorStateList.valueOf(primary)
+                setPadding(dp(12), dp(12), dp(12), dp(12))
+                layoutParams = RadioGroup.LayoutParams(-1, -2).apply { topMargin = dp(8) }
+            })
+        }
+        answers[q.id] = group
+        addView(group)
+    }
+
+    private fun label(value: String): TextView = text(value, 13f, true, muted, Gravity.START).apply {
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) }
+    }
+
+    private fun chip(value: String, color: Int): TextView = text(value, 12f, true, Color.WHITE, Gravity.CENTER).apply {
+        background = round(color, dp(12).toFloat())
+        setPadding(dp(14), dp(6), dp(14), dp(6))
+        layoutParams = LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(10) }
+    }
+
+    private fun text(v: String, s: Float, b: Boolean, c: Int, g: Int): TextView = TextView(this).apply {
+        text = v; textSize = s; setTextColor(c); gravity = g
+        if (b) typeface = Typeface.DEFAULT_BOLD
+    }
+
+    private fun swipeRefresh(child: View, onRefresh: () -> Unit) = androidx.swiperefreshlayout.widget.SwipeRefreshLayout(this).apply {
+        addView(scroll(child))
+        setOnRefreshListener { onRefresh(); isRefreshing = false }
+        setColorSchemeColors(primary)
+    }
+
+    private fun scroll(child: View) = ScrollView(this).apply { isFillViewport = true; addView(child) }
+
+    private fun round(c: Int, r: Float, sc: Int? = null, sw: Int = 0) = GradientDrawable().apply {
+        setColor(c); cornerRadius = r
+        if (sc != null) setStroke(sw, sc)
+    }
+
+    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+    private fun toast(m: String) = Toast.makeText(this, m, Toast.LENGTH_SHORT).show()
+    
+    private fun spinner(items: List<SubjectItem>): Spinner = Spinner(this).apply {
+        adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, items)
+        background = round(softSurface, dp(14).toFloat(), Color.parseColor("#CBD5E1"), dp(1))
+        setPadding(dp(16), dp(10), dp(16), dp(10))
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)).apply { topMargin = dp(10) }
+    }
+    
     private fun subjectSelectorCard(subjects: List<SubjectItem>, selected: SubjectItem?): LinearLayout = card().apply {
         addView(sectionTitle("Manage Subject", "Hold to delete or click to select"))
         val spinner = spinner(subjects)
@@ -746,22 +788,15 @@ class MainActivity : AppCompatActivity() {
         }
         addView(spinner)
         
-        // Add Long Press behavior to the spinner container
         spinner.setOnLongClickListener {
             val item = spinner.selectedItem as? SubjectItem
             if (item != null) {
                 android.app.AlertDialog.Builder(this@MainActivity)
                     .setTitle("Delete Subject?")
-                    .setMessage("Are you sure you want to delete '${item.name}'? This will remove all questions and results associated with it.")
+                    .setMessage("Are you sure you want to delete '${item.name}'?")
                     .setPositiveButton("Delete") { _, _ ->
                         viewModel.deleteSubject(item.id) { ok ->
-                            runOnUiThread {
-                                if (ok) {
-                                    toast("Subject deleted.")
-                                    currentAdminSubjectId = null
-                                    showAdminPanel()
-                                } else toast("Error deleting subject.")
-                            }
+                            runOnUiThread { if (ok) showAdminPanel() }
                         }
                     }
                     .setNegativeButton("Cancel", null)
@@ -783,7 +818,7 @@ class MainActivity : AppCompatActivity() {
             }
         }.apply { layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(5) } })
 
-        buttonLayout.addView(outlineButton("Edit Subject Info", "✏️") {
+        buttonLayout.addView(outlineButton("Edit Info", "✏️") {
             val item = spinner.selectedItem as? SubjectItem
             if (item != null) showEditSubjectPage(item)
         }.apply { layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(5) } })
@@ -794,557 +829,75 @@ class MainActivity : AppCompatActivity() {
     private fun showEditSubjectPage(subject: SubjectItem) {
         val root = screenRoot()
         root.addView(heroCard("Edit Subject", subject.name, "ID: ${subject.id}", false))
-
         val nameInput = input("Subject Name").apply { setText(subject.name) }
         val codeInput = input("Subject Code").apply { setText(subject.code) }
-        val contestSwitch = CheckBox(this).apply {
-            text = "Enable Contest Mode"
-            isChecked = subject.isContest
-            setTextColor(ink)
-        }
         
-        val contestLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            visibility = if (subject.isContest) View.VISIBLE else View.GONE
-        }
-        
-        val calendar = java.util.Calendar.getInstance().apply { timeInMillis = if (subject.startTime > 0) subject.startTime else System.currentTimeMillis() }
-        
-        val dateInput = input("Start Date (Click to select)").apply {
-            isFocusable = false
-            setText(String.format(Locale.US, "%04d-%02d-%02d", calendar.get(java.util.Calendar.YEAR), calendar.get(java.util.Calendar.MONTH) + 1, calendar.get(java.util.Calendar.DAY_OF_MONTH)))
-            setOnClickListener {
-                android.app.DatePickerDialog(this@MainActivity, { _, y, m, d ->
-                    calendar.set(java.util.Calendar.YEAR, y)
-                    calendar.set(java.util.Calendar.MONTH, m)
-                    calendar.set(java.util.Calendar.DAY_OF_MONTH, d)
-                    setText(String.format(Locale.US, "%04d-%02d-%02d", y, m + 1, d))
-                }, calendar.get(java.util.Calendar.YEAR), calendar.get(java.util.Calendar.MONTH), calendar.get(java.util.Calendar.DAY_OF_MONTH)).show()
-            }
-        }
-
-        val startTimeInput = input("Start Time (Click to select)").apply {
-            isFocusable = false
-            val h = calendar.get(java.util.Calendar.HOUR_OF_DAY)
-            val min = calendar.get(java.util.Calendar.MINUTE)
-            val amPm = if (h < 12) "AM" else "PM"
-            val h12 = if (h % 12 == 0) 12 else h % 12
-            setText(String.format(Locale.US, "%02d:%02d %s", h12, min, amPm))
-            setOnClickListener {
-                android.app.TimePickerDialog(this@MainActivity, { _, hSelected, minSelected ->
-                    calendar.set(java.util.Calendar.HOUR_OF_DAY, hSelected)
-                    calendar.set(java.util.Calendar.MINUTE, minSelected)
-                    val amPmS = if (hSelected < 12) "AM" else "PM"
-                    val h12S = if (hSelected % 12 == 0) 12 else hSelected % 12
-                    setText(String.format(Locale.US, "%02d:%02d %s", h12S, minSelected, amPmS))
-                }, calendar.get(java.util.Calendar.HOUR_OF_DAY), calendar.get(java.util.Calendar.MINUTE), false).show()
-            }
-        }
-        
-        val durationInput = input("Duration (Minutes)").apply { setText(subject.durationMin.toString()) }
-
-        contestLayout.addView(dateInput)
-        contestLayout.addView(startTimeInput)
-        contestLayout.addView(durationInput)
-        
-        contestSwitch.setOnCheckedChangeListener { _, isChecked -> contestLayout.visibility = if (isChecked) View.VISIBLE else View.GONE }
-
         root.addView(card().apply {
-            addView(nameInput)
-            addView(codeInput)
-            addView(contestSwitch)
-            addView(contestLayout)
+            addView(nameInput); addView(codeInput)
             addView(primaryButton("Save Changes", "💾") {
-                val n = nameInput.text.toString().trim()
-                val c = codeInput.text.toString().trim().uppercase()
-                if (n.isEmpty() || c.isEmpty()) return@primaryButton toast("Input missing")
-                
-                var st: Long = 0
-                var dur = 0
-                if (contestSwitch.isChecked) {
-                    st = calendar.timeInMillis
-                    dur = durationInput.text.toString().toIntOrNull() ?: 0
-                }
-                
-                viewModel.updateSubject(subject.id, n, c, contestSwitch.isChecked, st, dur) { ok ->
-                    runOnUiThread {
-                        if (ok) { toast("Subject updated!"); showAdminPanel() }
-                        else toast("Update failed")
-                    }
+                viewModel.updateSubject(subject.id, nameInput.text.toString(), codeInput.text.toString(), subject.isContest, subject.startTime, subject.durationMin) { ok ->
+                    runOnUiThread { if (ok) showAdminPanel() }
                 }
             })
             addView(outlineButton("Cancel", "❌") { showAdminPanel() })
         })
         setContentView(scroll(root))
     }
-
+    
     private fun bulkQuestionBuilderCard(subject: SubjectItem): LinearLayout = card().apply {
         addView(sectionTitle("Add Questions", "Bulk add questions to ${subject.name}"))
-        val questions = mutableListOf<QuestionDraftViews>()
         val container = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
-
-        fun addDraft() {
-            val draft = QuestionDraftViews(
-                input("Question Text"),
-                input("Option A"),
-                input("Option B"),
-                input("Option C"),
-                input("Option D"),
-                input("Correct Option (A/B/C/D)")
-            )
-            val row = card().apply {
-                addView(text("Question", 12f, true, primary, Gravity.START))
-                addView(draft.question)
-                addView(draft.optionA)
-                addView(draft.optionB)
-                addView(draft.optionC)
-                addView(draft.optionD)
-                addView(draft.correct)
-            }
-            container.addView(row)
-            questions.add(draft)
-        }
-
-        addDraft()
-        addView(container)
-        addView(outlineButton("Add Another", "➕") {
-            addDraft()
-            // Note: this won't refresh the UI since it's just adding to the list.
-            // For a real app we'd need a better way to refresh the card.
-            toast("Draft added. Please rebuild the screen to see it.")
-        })
-        addView(primaryButton("Save All", "💾") {
-            val drafts = questions.map {
-                Triple(it.question.text.toString(),
-                      listOf(it.optionA.text.toString(), it.optionB.text.toString(), it.optionC.text.toString(), it.optionD.text.toString()),
-                      it.correct.text.toString())
-            }
-            viewModel.addQuestions(subject.id, drafts) { saved, failed ->
-                runOnUiThread {
-                    toast("Saved: $saved, Failed: $failed")
-                    showAdminPanel()
-                }
+        val qInput = input("Question Text")
+        val optA = input("Option A"); val optB = input("Option B")
+        val optC = input("Option C"); val optD = input("Option D")
+        val correct = input("Correct (A/B/C/D)")
+        
+        addView(qInput); addView(optA); addView(optB); addView(optC); addView(optD); addView(correct)
+        
+        addView(primaryButton("Save Question", "💾") {
+            val drafts = listOf(Triple(qInput.text.toString(), listOf(optA.text.toString(), optB.text.toString(), optC.text.toString(), optD.text.toString()), correct.text.toString()))
+            viewModel.addQuestions(subject.id, drafts) { saved, _ ->
+                runOnUiThread { if (saved > 0) { toast("Saved!"); showAdminPanel() } }
             }
         })
     }
-
+    
     private fun questionDeleteCard(subject: SubjectItem): LinearLayout = card().apply {
-        addView(sectionTitle("Questions List", "Edit or remove questions from ${subject.name}"))
+        addView(sectionTitle("Questions List", "Remove questions from ${subject.name}"))
         viewModel.getQuestions(subject.id) { questions ->
             runOnUiThread {
-                val list = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
                 questions.forEach { q ->
-                    list.addView(card().apply {
+                    addView(card().apply {
                         addView(text(q.text, 14f, true, ink, Gravity.START))
-                        val btnRow = LinearLayout(this@MainActivity).apply { 
-                            orientation = LinearLayout.HORIZONTAL
-                            weightSum = 2f
-                            layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) }
-                        }
-                        
-                        btnRow.addView(outlineButton("Edit", "✏️") {
-                            showEditQuestionPage(subject, q)
-                        }.apply { layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(4) } })
-
-                        btnRow.addView(dangerButton("Delete", "🗑️") {
-                            viewModel.deleteQuestion(q.id) { ok ->
-                                runOnUiThread { toast(if (ok) "Deleted." else "Error."); showAdminPanel() }
-                            }
-                        }.apply { layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(4) } })
-                        
-                        addView(btnRow)
+                        addView(dangerButton("Delete", "🗑️") {
+                            viewModel.deleteQuestion(q.id) { ok -> runOnUiThread { if (ok) showAdminPanel() } }
+                        })
                     })
                 }
-                addView(list)
             }
         }
     }
-
-    private fun showEditQuestionPage(subject: SubjectItem, question: Question) {
-        val root = screenRoot()
-        root.addView(heroCard("Edit Question", subject.name, "Question ID: ${question.id}", false))
-        
-        val qInput = input("Question Text").apply { setText(question.text) }
-        val optA = input("Option A").apply { setText(question.optionA) }
-        val optB = input("Option B").apply { setText(question.optionB) }
-        val optC = input("Option C").apply { setText(question.optionC) }
-        val optD = input("Option D").apply { setText(question.optionD) }
-        val correct = input("Correct Option (A/B/C/D)").apply { setText(question.correctOption) }
-
-        root.addView(card().apply {
-            addView(qInput); addView(optA); addView(optB); addView(optC); addView(optD); addView(correct)
-            addView(primaryButton("Save Changes", "💾") {
-                val opts = listOf(optA.text.toString(), optB.text.toString(), optC.text.toString(), optD.text.toString())
-                viewModel.updateQuestion(question.id, qInput.text.toString(), opts, correct.text.toString()) { ok ->
-                    runOnUiThread {
-                        if (ok) { toast("Question updated!"); showAdminPanel() }
-                        else toast("Update failed")
-                    }
-                }
-            })
-            addView(outlineButton("Cancel", "❌") { showAdminPanel() })
-        })
-        setContentView(scroll(root))
-    }
-
+    
     private fun resultReportCard(subjects: List<SubjectItem>): LinearLayout = card().apply {
-        addView(sectionTitle("Subject Reports", "Overall performance summary"))
-        val list = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
-        subjects.forEach { subject ->
-            list.addView(resultRow(subject))
+        addView(sectionTitle("Reports", "Performance summary"))
+        subjects.forEach { s ->
+            addView(outlineButton(s.name, "📊") { showSubjectReportPage(s) })
         }
-        addView(list)
     }
-
-    private fun resultRow(subject: SubjectItem): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
-        setPadding(dp(10), dp(8), dp(10), dp(8))
-        addView(text(subject.name, 14f, true, ink, Gravity.START).apply {
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        })
-        addView(primaryButton("View Report", "📊") {
-            showSubjectReportPage(subject)
-        }.apply {
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        })
-    }
-
+    
     private fun showSubjectReportPage(subject: SubjectItem) {
         viewModel.getResultsForSubject(subject.id) { results ->
             runOnUiThread {
                 val root = screenRoot()
-                root.addView(heroCard("Subject Report", subject.name, "Total Exams: ${results.size}", false))
-
-                if (results.isEmpty()) {
+                root.addView(heroCard("Report", subject.name, "Results: ${results.size}", false))
+                results.forEach { r ->
                     root.addView(card().apply {
-                        addView(text("এই subject-এ এখনও কেউ পরীক্ষা দেয়নি।", 15f, false, muted, Gravity.CENTER))
+                        addView(text("${r.username}: ${r.percent}%", 16f, true, ink, Gravity.START))
                     })
-                } else {
-                    results.forEach { result ->
-                        root.addView(studentResultRow(result))
-                    }
                 }
-
-                root.addView(outlineButton("Back to Dashboard", "⬅") { showAdminPanel() })
+                root.addView(outlineButton("Back", "⬅") { showAdminPanel() })
                 setContentView(scroll(root))
             }
         }
     }
-
-    private fun studentResultRow(result: ExamResultRow): LinearLayout {
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(12) }
-        }
-
-        val header = card().apply {
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = 0 }
-            val horizontal = LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                addView(text(result.username, 16f, true, ink, Gravity.START).apply {
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                })
-                val percentText = String.format(Locale.US, "%.2f%%", result.percent)
-                addView(text(percentText, 16f, true, if (result.percent >= 60) success else danger, Gravity.END))
-            }
-            addView(horizontal)
-            addView(text("Submitted: ${result.submittedAt}", 11f, false, muted, Gravity.START))
-        }
-
-        val detailsContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            visibility = View.GONE
-            setPadding(dp(10), 0, dp(10), dp(10))
-            background = round(Color.parseColor("#F8FAFC"), dp(16).toFloat())
-        }
-
-        header.setOnClickListener {
-            if (detailsContainer.visibility == View.GONE) {
-                if (detailsContainer.childCount == 0) {
-                    viewModel.getDetailedAnswers(result.resultId) { answers ->
-                        runOnUiThread {
-                            answers.forEach { ans ->
-                                detailsContainer.addView(answerDetailRow(ans))
-                            }
-                            detailsContainer.visibility = View.VISIBLE
-                        }
-                    }
-                } else {
-                    detailsContainer.visibility = View.VISIBLE
-                }
-            } else {
-                detailsContainer.visibility = View.GONE
-            }
-        }
-
-        container.addView(header)
-        container.addView(detailsContainer)
-        return container
-    }
-
-    private fun answerDetailRow(ans: UserAnswerDetail): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        setPadding(0, dp(8), 0, dp(8))
-        addView(text(ans.questionText, 13f, true, ink, Gravity.START))
-        val statusText = if (ans.isCorrect) {
-            "✅ Correct: ${ans.selectedOption}"
-        } else {
-            "❌ Wrong! Selected: ${ans.selectedOption} | Correct: ${ans.correctOption}"
-        }
-        addView(text(statusText, 12f, false, if (ans.isCorrect) success else danger, Gravity.START))
-        addView(View(this@MainActivity).apply {
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1))
-            setBackgroundColor(Color.parseColor("#E2E8F0"))
-        })
-    }
-
-    private fun screenRoot(): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        setPadding(dp(18), dp(20), dp(18), dp(28))
-        background = gradient(intArrayOf(Color.parseColor("#EEF2FF"), Color.parseColor("#FDFBFF")), GradientDrawable.Orientation.TOP_BOTTOM, dp(0).toFloat())
-    }
-
-    private fun heroCard(title: String, subtitle: String, badge: String, showPicture: Boolean): LinearLayout = card(primaryDark).apply {
-        elevation = dp(8).toFloat()
-        addView(
-            LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER_HORIZONTAL
-                setPadding(dp(10), dp(10), dp(10), dp(10))
-                if (showPicture) addView(pictureSection())
-                addView(chip(badge, accent))
-                addView(text(title, 32f, true, Color.WHITE, Gravity.CENTER))
-                addView(text(subtitle, 16f, false, Color.parseColor("#E0E7FF"), Gravity.CENTER))
-            }
-        )
-    }
-
-    private fun pictureSection(): FrameLayout = FrameLayout(this).apply {
-        layoutParams = LinearLayout.LayoutParams(dp(150), dp(118)).apply { bottomMargin = dp(14) }
-        background = gradient(intArrayOf(Color.parseColor("#8E7CFF"), Color.parseColor("#00D2D3")), GradientDrawable.Orientation.TL_BR, dp(30).toFloat())
-        addView(
-            ImageView(this@MainActivity).apply {
-                setImageResource(R.drawable.ic_quiz_hero)
-                alpha = 0.95f
-                scaleType = ImageView.ScaleType.CENTER_INSIDE
-                setPadding(dp(20), dp(14), dp(20), dp(14))
-                layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            }
-        )
-        addView(
-            TextView(this@MainActivity).apply {
-                text = "MCQ"
-                textSize = 13f
-                setTextColor(primaryDark)
-                typeface = Typeface.DEFAULT_BOLD
-                gravity = Gravity.CENTER
-                background = round(Color.WHITE, dp(18).toFloat())
-                layoutParams = FrameLayout.LayoutParams(dp(64), dp(34), Gravity.BOTTOM or Gravity.END).apply {
-                    rightMargin = dp(8)
-                    bottomMargin = dp(8)
-                }
-            }
-        )
-    }
-
-    private fun card(color: Int = surface): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        elevation = dp(4).toFloat()
-        background = round(color, dp(20).toFloat(), if (color == surface) Color.parseColor("#F1F5F9") else color, dp(1))
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            bottomMargin = dp(16)
-        }
-        setPadding(dp(20), dp(20), dp(20), dp(20))
-    }
-
-    private fun sectionTitle(title: String, subtitle: String): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        addView(text(title, 22f, true, ink, Gravity.START))
-        addView(text(subtitle, 13f, false, muted, Gravity.START))
-    }
-
-    private fun questionCard(number: Int, question: Question, answers: MutableMap<Long, RadioGroup>): LinearLayout = card().apply {
-        addView(chip("Question $number", primary))
-        addView(text(question.text, 18f, true, ink, Gravity.START))
-        val group = RadioGroup(this@MainActivity).apply {
-            orientation = RadioGroup.VERTICAL
-            setPadding(0, dp(6), 0, 0)
-        }
-        mapOf("A" to question.optionA, "B" to question.optionB, "C" to question.optionC, "D" to question.optionD).forEach { (key, value) ->
-            group.addView(optionButton(key, value))
-        }
-        answers[question.id] = group
-        addView(group)
-    }
-
-    private fun optionButton(key: String, value: String): RadioButton = RadioButton(this).apply {
-        text = "$key. $value"
-        tag = key
-        textSize = 15f
-        setTextColor(ink)
-        buttonTintList = ColorStateList.valueOf(primary)
-        background = round(softSurface, dp(18).toFloat())
-        setPadding(dp(14), dp(10), dp(14), dp(10))
-        layoutParams = RadioGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            topMargin = dp(8)
-        }
-    }
-
-    private fun statsRow(items: List<Pair<String, String>>): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.HORIZONTAL
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(14) }
-        items.forEachIndexed { index, item ->
-            addView(statBox(item.first, item.second).apply {
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                    if (index > 0) leftMargin = dp(8)
-                }
-            })
-        }
-    }
-
-    private fun statBox(label: String, value: String): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        elevation = dp(4).toFloat()
-        background = round(surface, dp(20).toFloat(), Color.parseColor("#E7E9F5"), dp(1))
-        setPadding(dp(14), dp(14), dp(14), dp(14))
-        addView(
-            LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER
-                addView(text(value, 26f, true, primary, Gravity.CENTER))
-                addView(text(label, 12f, false, muted, Gravity.CENTER))
-            }
-        )
-    }
-
-    private fun bigScore(value: String): TextView = text(value, 46f, true, primary, Gravity.CENTER).apply {
-        background = gradient(intArrayOf(Color.parseColor("#F4F1FF"), Color.parseColor("#E9FBFF")), GradientDrawable.Orientation.LEFT_RIGHT, dp(26).toFloat())
-        setPadding(dp(16), dp(18), dp(16), dp(18))
-    }
-
-    private fun input(hintText: String, password: Boolean = false): EditText = EditText(this).apply {
-        hint = hintText
-        textSize = 15f
-        setTextColor(ink)
-        setHintTextColor(muted)
-        setSingleLine(true)
-        minHeight = dp(56)
-        background = round(softSurface, dp(14).toFloat(), Color.parseColor("#CBD5E1"), dp(1))
-        setPadding(dp(20), dp(12), dp(20), dp(12))
-        inputType = if (password) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD else InputType.TYPE_CLASS_TEXT
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            topMargin = dp(12)
-        }
-    }
-
-    private fun spinner(items: List<SubjectItem>): Spinner = Spinner(this).apply {
-        adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, items)
-        background = round(softSurface, dp(14).toFloat(), Color.parseColor("#CBD5E1"), dp(1))
-        setPadding(dp(16), dp(10), dp(16), dp(10))
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)).apply { topMargin = dp(10) }
-    }
-
-    private fun primaryButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, primary, Color.WHITE, action)
-
-    private fun dangerButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, danger, Color.WHITE, action)
-
-    private fun outlineButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, Color.TRANSPARENT, primary, action).apply {
-        strokeWidth = dp(1)
-        strokeColor = ColorStateList.valueOf(primary)
-        backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-    }
-
-    private fun fancyButton(label: String, icon: String, backgroundColor: Int, textColor: Int, action: () -> Unit): MaterialButton = MaterialButton(this).apply {
-        text = "$icon  $label"
-        textSize = 15f
-        typeface = Typeface.DEFAULT_BOLD
-        isAllCaps = false
-        cornerRadius = dp(16)
-        insetTop = 0
-        insetBottom = 0
-        setTextColor(textColor)
-        backgroundTintList = ColorStateList.valueOf(backgroundColor)
-        minHeight = dp(56)
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { 
-            topMargin = dp(14) 
-        }
-        setOnClickListener { action() }
-    }
-
-    private fun label(value: String): TextView = text(value, 13f, true, muted, Gravity.START).apply {
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) }
-    }
-
-    private fun chip(value: String, color: Int): TextView = text(value, 12f, true, Color.WHITE, Gravity.CENTER).apply {
-        background = round(color, dp(18).toFloat())
-        setPadding(dp(12), dp(6), dp(12), dp(6))
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(10) }
-    }
-
-    private fun infoStrip(label: String, value: String, color: Int): TextView = text("$label: $value", 13f, true, ink, Gravity.CENTER).apply {
-        background = round(adjustAlpha(color, 0.18f), dp(16).toFloat(), adjustAlpha(color, 0.7f), dp(1))
-        setPadding(dp(12), dp(10), dp(12), dp(10))
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) }
-    }
-
-    private fun text(value: String, size: Float, bold: Boolean, color: Int, gravityValue: Int): TextView = TextView(this).apply {
-        text = value
-        textSize = size
-        setTextColor(color)
-        gravity = gravityValue
-        includeFontPadding = true
-        if (bold) typeface = Typeface.DEFAULT_BOLD
-        setPadding(0, dp(4), 0, dp(4))
-    }
-
-    private fun swipeRefresh(child: View, onRefresh: () -> Unit): androidx.swiperefreshlayout.widget.SwipeRefreshLayout {
-        return androidx.swiperefreshlayout.widget.SwipeRefreshLayout(this).apply {
-            addView(scroll(child))
-            setOnRefreshListener {
-                onRefresh()
-                isRefreshing = false
-            }
-            setColorSchemeColors(primary)
-        }
-    }
-
-    private fun scroll(child: View): ScrollView = ScrollView(this).apply {
-        isFillViewport = true
-        addView(child)
-    }
-
-    private fun resultEmoji(percent: Double): String = when {
-        percent >= 80.0 -> "🏆 Excellent"
-        percent >= 60.0 -> "🌟 Good Job"
-        percent >= 40.0 -> "📘 Keep Practicing"
-        else -> "💪 Try Again"
-    }
-
-    private fun performanceMessage(percent: Double): String = when {
-        percent >= 80.0 -> "Competition level preparation ভালো চলছে।"
-        percent >= 60.0 -> "ভালো, তবে আরও practice করলে score বাড়বে।"
-        percent >= 40.0 -> "Basic clear হচ্ছে, ভুল question review দরকার।"
-        else -> "Foundation weak, topic ধরে ধরে revise করো।"
-    }
-
-    private fun gradient(colors: IntArray, orientation: GradientDrawable.Orientation, radius: Float): GradientDrawable = GradientDrawable(orientation, colors).apply {
-        cornerRadius = radius
-    }
-
-    private fun round(color: Int, radius: Float, strokeColor: Int? = null, strokeWidth: Int = 0): GradientDrawable = GradientDrawable().apply {
-        setColor(color)
-        cornerRadius = radius
-        if (strokeColor != null) setStroke(strokeWidth, strokeColor)
-    }
-
-    private fun adjustAlpha(color: Int, factor: Float): Int {
-        val alpha = (Color.alpha(color) * factor).toInt()
-        return Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
-    }
-
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
-
-    private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 }

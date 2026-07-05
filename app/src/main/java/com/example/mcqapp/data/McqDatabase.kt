@@ -26,6 +26,8 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
                 username TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
                 role TEXT NOT NULL,
+                phone TEXT DEFAULT '',
+                email TEXT DEFAULT '',
                 unique_code TEXT UNIQUE,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
@@ -138,6 +140,8 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
         // For this modernization phase, we reset the DB to apply the new schema.
         db.execSQL("DROP TABLE IF EXISTS user_answers")
         db.execSQL("DROP TABLE IF EXISTS exam_results")
+        db.execSQL("DROP TABLE IF EXISTS reminders")
+        db.execSQL("DROP TABLE IF EXISTS contest_registrations")
         db.execSQL("DROP TABLE IF EXISTS questions")
         db.execSQL("DROP TABLE IF EXISTS subjects")
         db.execSQL("DROP TABLE IF EXISTS users")
@@ -166,6 +170,6 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
 
     companion object {
         private const val DATABASE_NAME = "mcq_app.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
     }
 }

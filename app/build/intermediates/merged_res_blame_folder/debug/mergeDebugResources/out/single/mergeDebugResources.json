@@ -1,6 +1,10 @@
 [
     {
-        "merged": "com.example.mcqapp-debug-39:/drawable_ic_quiz_hero.xml.flat",
-        "source": "com.example.mcqapp-main-41:/drawable/ic_quiz_hero.xml"
+        "merged": "C:\\Users\\PC\\.gradle\\daemon\\8.13\\com.example.mcqapp-debug-39:\\drawable_ic_quiz_hero.xml.flat",
+        "source": "C:\\Users\\PC\\.gradle\\daemon\\8.13\\com.example.mcqapp-main-41:\\drawable\\ic_quiz_hero.xml"
+    },
+    {
+        "merged": "com.example.mcqapp-debug-39:/drawable_spec_logo.png.flat",
+        "source": "com.example.mcqapp-main-41:/drawable/spec_logo.png"
     }
 ]

@@ -32,7 +32,7 @@ class McqRepository(private val dbHelper: McqDatabase) {
 
     suspend fun login(username: String, password: String): User? = withContext(Dispatchers.IO) {
         dbHelper.readableDatabase.rawQuery(
-            "SELECT id, username, full_name, role FROM users WHERE username = ?",
+            "SELECT id, username, full_name, role, phone, email FROM users WHERE username = ?",
             arrayOf(username.trim())
         ).use { cursor ->
             if (!cursor.moveToFirst()) return@withContext null
@@ -47,9 +47,21 @@ class McqRepository(private val dbHelper: McqDatabase) {
                 id = cursor.getLong(0),
                 username = cursor.getString(1),
                 fullName = cursor.getString(2) ?: "",
-                role = cursor.getString(3)
+                role = cursor.getString(3),
+                phone = cursor.getString(4) ?: "",
+                email = cursor.getString(5) ?: ""
             )
         }
+    }
+
+    suspend fun updateUserProfile(userId: Long, phone: String, email: String): Boolean = withContext(Dispatchers.IO) {
+        val values = ContentValues().apply {
+            put("phone", phone.trim())
+            put("email", email.trim())
+        }
+        runCatching {
+            dbHelper.writableDatabase.update("users", values, "id = ?", arrayOf(userId.toString())) > 0
+        }.getOrDefault(false)
     }
 
     suspend fun addSubject(teacherId: Long, name: String, code: String, isContest: Boolean = false, startTime: Long = 0, duration: Int = 0): Boolean = withContext(Dispatchers.IO) {

@@ -4,7 +4,9 @@ data class User(
     val id: Long,
     val username: String,
     val fullName: String = "",
-    val role: String
+    val role: String,
+    val phone: String = "",
+    val email: String = ""
 )
 
 data class SubjectItem(
