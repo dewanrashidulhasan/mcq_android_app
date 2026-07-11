@@ -353,7 +353,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 root.addView(dangerButton("Logout", "🚪") { logout() })
-                setContentView(swipeRefresh(root) { showAdminPanel() })
+                setContentView(swipeRefresh(scroll(root)) { showAdminPanel() })
             }
         }
     }
@@ -416,7 +416,7 @@ class MainActivity : AppCompatActivity() {
         })
         
         root.addView(dangerButton("Logout", "🚪") { logout() })
-        setContentView(swipeRefresh(root) { showExamScreen() })
+        setContentView(swipeRefresh(scroll(root)) { showExamScreen() })
     }
 
     private fun showProfilePage() {
@@ -565,7 +565,7 @@ class MainActivity : AppCompatActivity() {
                     strokeColor = ColorStateList.valueOf(muted)
                     setTextColor(muted)
                 })
-                setContentView(scroll(root))
+                setContentView(swipeRefresh(scroll(root)) { showRegisteredContestsPage() })
             }
         }
     }
@@ -597,7 +597,7 @@ class MainActivity : AppCompatActivity() {
                     strokeColor = ColorStateList.valueOf(muted)
                     setTextColor(muted)
                 })
-                setContentView(scroll(root))
+                setContentView(swipeRefresh(scroll(root)) { showRegisteredContestsPage() })
             }
         }
     }
@@ -622,47 +622,56 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showContestOrExamInfo(subject: SubjectItem) {
+    private fun showContestOrExamInfo(oldSubject: SubjectItem) {
         val user = viewModel.currentUser.value ?: return
-        val root = screenRoot()
-        root.addView(heroCard(subject.name, "Contest Mode Enabled", "Duration: ${subject.durationMin}m", false))
-        root.addView(card().apply {
-            addView(sectionTitle("Exam Info", "সাবজেক্ট কোড: ${subject.code}"))
-            val now = System.currentTimeMillis()
-            
-            if (subject.hasSubmitted) {
-                addView(text("Exam Completed", 14f, true, muted, Gravity.START))
-                addView(fancyButton("Score Submitted", "✅", Color.LTGRAY, Color.WHITE) {
-                    toast("You cannot take the same exam twice.")
-                })
-            } else if (subject.isContest && now >= subject.startTime && now <= (subject.startTime + (subject.durationMin * 60000))) {
-                // Direct join if contest is currently LIVE
-                addView(text("Contest is LIVE now!", 14f, true, success, Gravity.START))
-                addView(primaryButton("Join Immediately", "🚀") { showQuestionPaper(subject) })
-            } else if (subject.isRegistered) {
-                if (subject.isContest && now < subject.startTime) {
-                    val diff = subject.startTime - now
-                    val mins = (diff / 60000).toInt()
-                    addView(text("Contest starts in $mins minutes", 14f, true, warning, Gravity.START))
-                    addView(fancyButton("Waiting for Start", "⏳", Color.LTGRAY, Color.WHITE) {
-                        toast("Please wait until the start time.")
-                    })
-                } else {
-                    addView(primaryButton("Join Now", "🚀") { showQuestionPaper(subject) })
-                }
-            } else {
-                addView(primaryButton("Register Now", "📝") {
-                    viewModel.registerForContest(user.id, subject.id) { ok ->
-                        runOnUiThread { if (ok) showExamScreen() }
+        
+        // Refresh subject data to ensure real-time status (LIVE/Waiting)
+        viewModel.searchSubject(user.id, oldSubject.code) { subject ->
+            runOnUiThread {
+                if (subject == null) return@runOnUiThread
+                
+                val root = screenRoot()
+                root.addView(heroCard(subject.name, "Contest Mode Enabled", "Duration: ${subject.durationMin}m", false))
+                root.addView(card().apply {
+                    addView(sectionTitle("Exam Info", "সাবজেক্ট কোড: ${subject.code}"))
+                    val now = System.currentTimeMillis()
+                    
+                    if (subject.hasSubmitted) {
+                        addView(text("Exam Completed", 14f, true, muted, Gravity.START))
+                        addView(fancyButton("Score Submitted", "✅", Color.LTGRAY, Color.WHITE) {
+                            toast("You cannot take the same exam twice.")
+                        })
+                    } else if (subject.isContest && now >= subject.startTime && now <= (subject.startTime + (subject.durationMin * 60000))) {
+                        // Direct join if contest is currently LIVE
+                        addView(text("Contest is LIVE now!", 14f, true, success, Gravity.START))
+                        addView(primaryButton("Join Immediately", "🚀") { showQuestionPaper(subject) })
+                    } else if (subject.isRegistered) {
+                        if (subject.isContest && now < subject.startTime) {
+                            val diff = subject.startTime - now
+                            val mins = (diff / 60000).toInt()
+                            addView(text("Contest starts in $mins minutes", 14f, true, warning, Gravity.START))
+                            addView(fancyButton("Waiting for Start", "⏳", Color.LTGRAY, Color.WHITE) {
+                                // Re-trigger info to check status again
+                                showContestOrExamInfo(subject)
+                            })
+                        } else {
+                            addView(primaryButton("Join Now", "🚀") { showQuestionPaper(subject) })
+                        }
+                    } else {
+                        addView(primaryButton("Register Now", "📝") {
+                            viewModel.registerForContest(user.id, subject.id) { ok ->
+                                runOnUiThread { if (ok) showExamScreen() }
+                            }
+                        })
                     }
+                    addView(outlineButton("Back", "⬅") { showExamScreen() }.apply {
+                        strokeColor = ColorStateList.valueOf(muted)
+                        setTextColor(muted)
+                    })
                 })
+                setContentView(swipeRefresh(scroll(root)) { showContestOrExamInfo(subject) })
             }
-            addView(outlineButton("Back", "⬅") { showExamScreen() }.apply {
-                strokeColor = ColorStateList.valueOf(muted)
-                setTextColor(muted)
-            })
-        })
-        setContentView(scroll(root))
+        }
     }
 
     private fun showQuestionPaper(subject: SubjectItem) {
@@ -709,7 +718,7 @@ class MainActivity : AppCompatActivity() {
                 root.addView(primaryButton("Submit Now", "🏁") {
                     submitExam(subject, questions, answers)
                 })
-                setContentView(scroll(root))
+                setContentView(swipeRefresh(scroll(root)) { showRegisteredContestsPage() })
             }
         }
     }
@@ -1130,7 +1139,7 @@ class MainActivity : AppCompatActivity() {
                     })
                 }
                 root.addView(outlineButton("Back", "⬅") { showAdminPanel() })
-                setContentView(scroll(root))
+                setContentView(swipeRefresh(scroll(root)) { showRegisteredContestsPage() })
             }
         }
     }
