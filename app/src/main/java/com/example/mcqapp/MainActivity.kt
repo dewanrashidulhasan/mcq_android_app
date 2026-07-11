@@ -580,6 +580,17 @@ class MainActivity : AppCompatActivity() {
                     root.addView(card().apply {
                         addView(text(r.subjectName, 14f, true, primary, Gravity.START))
                         addView(text(r.message, 13f, false, ink, Gravity.START))
+                        
+                        if (r.message.contains("results", ignoreCase = true) || r.message.contains("ফলাফল", ignoreCase = true)) {
+                            addView(TextView(this@MainActivity).apply {
+                                text = "View Result 📊"
+                                textSize = 14f
+                                setTextColor(accent)
+                                typeface = Typeface.DEFAULT_BOLD
+                                setPadding(0, dp(10), 0, 0)
+                                setOnClickListener { showStudentResultPage(r.subjectId) }
+                            })
+                        }
                     })
                 }
                 root.addView(outlineButton("Back", "⬅") { showExamScreen() }.apply {
@@ -588,6 +599,26 @@ class MainActivity : AppCompatActivity() {
                 })
                 setContentView(scroll(root))
             }
+        }
+    }
+
+    private fun showStudentResultPage(subjectId: Long) {
+        val user = viewModel.currentUser.value ?: return
+        val db = McqDatabase(this).readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT total, correct, percent FROM exam_results WHERE user_id = ? AND subject_id = ? ORDER BY id DESC LIMIT 1",
+            arrayOf(user.id.toString(), subjectId.toString())
+        )
+        
+        if (cursor.moveToFirst()) {
+            val total = cursor.getInt(0)
+            val correct = cursor.getInt(1)
+            val percent = cursor.getDouble(2)
+            cursor.close()
+            showResultScreen(total, correct, percent)
+        } else {
+            cursor.close()
+            toast("Result not found.")
         }
     }
 
