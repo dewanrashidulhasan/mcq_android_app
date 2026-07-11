@@ -1,87 +1,113 @@
-# SPEC MCQ - Presentation Guide & Project Overview 🎓
-
-এই গাইডটি আপনাকে **৭ পৃষ্ঠার একটি প্রফেশনাল প্রেজেন্টেশন** তৈরি করতে সাহায্য করবে। প্রতিটি পৃষ্ঠার জন্য প্রয়োজনীয় স্ক্রিনশট এবং বিস্তারিত তথ্য নিচে দেওয়া হলো।
-
----
-
-## 📽 Presentation Structure (7 Pages)
-
-### 📄 Page 1: Introduction & Welcome Screen
-**মূল বিষয়:** অ্যাপের পরিচিতি এবং আকর্ষণীয় এন্ট্রি ইন্টারফেস।
-*   **ফিচার:** কাস্টম লোগো (SPEC Logo), মডার্ন কালার প্যালেট, এবং সিকিউর গেটওয়ে।
-*   **স্ক্রিনশট:** ![Page 1 - Entry](screenshots/p1_login.png)
-*   **মার্কিং গাইড:** 
-    *   **🔴 লোগো:** ব্র্যান্ডিং আইডেন্টিটি।
-    *   **🔵 লগইন ফর্ম:** ইউজার অ্যাক্সেস কন্ট্রোল।
+# SPEC MCQ - Total Digital Examination Solution 🎓
+**SPEC MCQ** হলো একটি পূর্ণাঙ্গ অফলাইন কুইজ এবং কনটেস্ট প্ল্যাটফর্ম যা শিক্ষা প্রতিষ্ঠানের পরীক্ষা পদ্ধতিকে ডিজিটালাইজ করার জন্য তৈরি করা হয়েছে। এই ফাইলটি একটি **৭-পৃষ্ঠার প্রেজেন্টেশন গাইড** হিসেবে তৈরি করা হয়েছে, যেখানে প্রতিটি ফিচারের কাজের পদ্ধতি (Work Process) বিস্তারিত ব্যাখ্যা করা হয়েছে।
 
 ---
 
-### 📄 Page 2: Role-Based Registration
-**মূল বিষয়:** শিক্ষক এবং শিক্ষার্থীদের জন্য আলাদা রেজিস্ট্রেশন সিস্টেম।
-*   **ফিচার:** মাল্টি-রোল সাপোর্ট (Teacher/Student), BCrypt পাসওয়ার্ড এনক্রিপশন।
-*   **স্ক্রিনশট:** ![Page 2 - Registration](screenshots/p2_reg.png)
-*   **মার্কিং গাইড:** 
-    *   **🟢 Student Register:** শিক্ষার্থীদের জন্য আকাশী নীল বাটন।
-    *   **🟣 Teacher Register:** শিক্ষকদের জন্য ইন্ডিগো বাটন।
+## 📽 Presentation Page-by-Page Breakdown
+
+### 📄 Page 1: Brand Identity & Security Entry
+**ফিচারসমূহ:**
+*   **Custom Branding:** বড় আকৃতির SPEC লোগো এবং মডার্ন ইন্ডিগো থিম।
+*   **Security Gateway:** ব্যবহারকারীর তথ্যের সুরক্ষায় BCrypt পাসওয়ার্ড হ্যাশিং।
+*   **ইন্টারফেস:** পরিষ্কার এবং ইন্টারেক্টিভ লগইন ফর্ম।
+
+**কাজের পদ্ধতি (Working Process):**
+১. ইউজার অ্যাপ ওপেন করলে মডার্ন হিরো কার্ডের মাধ্যমে স্বাগত জানানো হয়।
+২. ইউজারনেম এবং পাসওয়ার্ড দিয়ে লগইন বাটনে ক্লিক করলে ডাটাবেস চেক করা হয়।
+৩. সঠিক তথ্য দিলে ইউজারের রোল (Teacher/Student) অনুযায়ী তাকে নির্দিষ্ট প্যানেলে নিয়ে যাওয়া হয়।
+![Page 1 - Login](screenshots/p1_login.png)
 
 ---
 
-### 📄 Page 3: Admin Power Dashboard
-**মূল বিষয়:** শিক্ষকদের ম্যানেজমেন্ট সেন্টার।
-*   **ফিচার:** রিয়েল-টাইম স্ট্যাটিস্টিকস (Total Subjects, Questions, Students), কনটেস্ট শিডিউলিং।
-*   **স্ক্রিনশট:** ![Page 3 - Admin Panel](screenshots/p3_admin.png)
-*   **মার্কিং গাইড:** 
-    *   **📊 Stats Row:** ড্যাশবোর্ডের মূল সামারি।
-    *   **⚙️ Create Subject:** টাইম এবং ডেট পিকারসহ কনটেস্ট মোড।
+### 📄 Page 2: Advanced Registration System
+**ফিচারসমূহ:**
+*   **Multi-Role Access:** শিক্ষক এবং শিক্ষার্থীদের জন্য আলাদা ডেডিকেটেড বাটন।
+*   **Color-Coded UI:** স্টুডেন্টের জন্য আকাশী নীল এবং টিচারের জন্য গাঢ় ইন্ডিগো বাটন।
+*   **Data Integrity:** ইউনিক ইউজারনেম ভ্যালিডেশন।
+
+**কাজের পদ্ধতি (Working Process):**
+১. নতুন ইউজার রেজিস্ট্রেশন পেজে গিয়ে নিজের নাম, ফোন, এবং ইমেইল প্রদান করে।
+২. পাসওয়ার্ডটি ডাটাবেসে সরাসরি সেভ না হয়ে এনক্রিপ্টেড কোড হিসেবে জমা হয়।
+৩. সফল রেজিস্ট্রেশন শেষে ইউজারকে সরাসরি লগইন স্ক্রিনে ফিরিয়ে আনা হয়।
+![Page 2 - Registration](screenshots/p2_reg.png)
 
 ---
 
-### 📄 Page 4: Bulk MCQ Management (New!)
-**মূল বিষয়:** দ্রুত এবং ডাইনামিক প্রশ্ন যোগ করার পদ্ধতি।
-*   **ফিচার:** 'Add Another Question' বাটন, ডাইনামিক কার্ড ভিউ, এবং এক ক্লিকে বাল্ক সেভ।
-*   **স্ক্রিনশট:** ![Page 4 - Bulk Entry](screenshots/p4_bulk.png)
-*   **মার্কিং গাইড:** 
-    *   **➕ Add Button:** একাধিক প্রশ্নের ঘর তৈরি করা।
-    *   **💾 Save All:** একসাথে সব প্রশ্ন ডাটাবেসে সেভ করা।
+### 📄 Page 3: Admin Management Powerhouse
+**ফিচারসমূহ:**
+*   **Live Analytics:** মোট সাবজেক্ট, প্রশ্ন এবং শিক্ষার্থীর সংখ্যা এক পলকে দেখার ড্যাশবোর্ড।
+*   **Contest Scheduling:** ক্যালেন্ডার এবং ডিজিটাল টাইম পিকারের সমন্বয়ে পরীক্ষা শিডিউলিং।
+*   **Subject Control:** সাবজেক্ট এডিট, আপডেট এবং ডিলিট করার পূর্ণ ক্ষমতা।
+
+**কাজের পদ্ধতি (Working Process):**
+১. টিচার ড্যাশবোর্ড থেকে একটি সাবজেক্ট তৈরি করেন এবং 'Contest Mode' অন করেন।
+২. টাইম পিকার দিয়ে পরীক্ষার সময় এবং ডিউরেশন সেট করেন।
+৩. এই তথ্যগুলো SQLite ডাটাবেসে রিয়েল-টাইমে আপডেট হয়।
+![Page 3 - Admin Panel](screenshots/p3_admin.png)
 
 ---
 
-### 📄 Page 5: Student Exam Finder & Portal
-**মূল বিষয়:** শিক্ষার্থীদের জন্য সহজ পরীক্ষা খোঁজার পদ্ধতি।
-*   **ফিচার:** সাবজেক্ট কোড সার্চ, রেজিস্টার্ড কনটেস্ট লিস্ট।
-*   **স্ক্রিনশট:** ![Page 5 - Student Portal](screenshots/p5_student.png)
-*   **মার্কিং গাইড:** 
-    *   **🔍 Search Box:** টিচারের দেওয়া কোড দিয়ে ইনস্ট্যান্ট সার্চ।
-    *   **📋 Registered Contests:** নিজের নিবন্ধিত সব পরীক্ষার তালিকা।
+### 📄 Page 4: Dynamic Bulk MCQ Entry (New Logic)
+**ফিচারসমূহ:**
+*   **Infinite Questioning:** 'Add Another Question' বাটনের মাধ্যমে আনলিমিটেড প্রশ্ন যোগ।
+*   **Smart Removal:** প্রতিটি প্রশ্নের জন্য আলাদা রিমুভ বাটন।
+*   **Batch Saving:** সব প্রশ্ন একসাথে এক ক্লিকে সেভ করার পদ্ধতি।
+
+**কাজের পদ্ধতি (Working Process):**
+১. টিচার একটি প্রশ্ন টাইপ করে 'Add Another' বাটনে ক্লিক করেন।
+২. সাথে সাথে একটি নতুন সুন্দর কার্ড ভিউ ওপেন হয় নতুন প্রশ্ন লেখার জন্য।
+৩. সব লেখা শেষ হলে 'Save All Questions' বাটনে ক্লিক করলে লুপের মাধ্যমে সব ডাটাবেসে সেভ হয়।
+![Page 4 - Bulk Entry](screenshots/p4_bulk.png)
 
 ---
 
-### 📄 Page 6: Live Contest & Security
-**মূল বিষয়:** লাইভ পরীক্ষা চলাকালীন কন্ট্রোল এবং সিকিউরিটি।
-*   **ফিচার:** লাইভ কাউন্টডাউন টাইমার, সরাসরি জয়েনিং (Direct Join), এবং ওয়ান-টাইম সাবমিশন।
-*   **স্ক্রিনশট:** ![Page 6 - Live Exam](screenshots/p6_timer.png)
-*   **মার্কিং গাইড:** 
-    *   **⏱ Countdown Timer:** সময় শেষ হওয়ার রিয়েল-টাইম সতর্কবার্তা।
-    *   **🔒 Restricted Access:** একবার সাবমিট করার পর পুনরায় প্রবেশের বাধা।
+### 📄 Page 5: Student Exam Finder & Enrollment
+**ফিচারসমূহ:**
+*   **Code Search:** জটিল লিঙ্কের পরিবর্তে শুধুমাত্র Subject Code (যেমন: PHY101) দিয়ে সার্চ।
+*   **Direct Join Logic:** পরীক্ষা লাইভ থাকলে সরাসরি জয়েন বাটন প্রদর্শন।
+*   **Contest Registration:** আগাম পরীক্ষার জন্য সিট বুক করে রাখা।
+
+**কাজের পদ্ধতি (Working Process):**
+১. শিক্ষার্থী টিচারের দেওয়া কোডটি ইনপুট বক্সে টাইপ করে সার্চ দেয়।
+২. সিস্টেম চেক করে পরীক্ষাটি কি 'Upcoming' না 'LIVE'।
+৩. সময় অনুযায়ী শিক্ষার্থীকে জয়েন করার অথবা ওয়েট করার অপশন দেওয়া হয়।
+![Page 5 - Student Portal](screenshots/p5_student.png)
 
 ---
 
-### 📄 Page 7: Smart Notifications & Results
-**মূল বিষয়:** ফলাফল ঘোষণা এবং ইউজার এঙ্গেজমেন্ট।
-*   **ফিচার:** হিডেন রেজাল্ট (কনটেস্ট শেষ হওয়ার আগে রেজাল্ট দেখা যাবে না), পুশ-লাইক নোটিফিকেশন হিস্ট্রি।
-*   **স্ক্রিনশট:** ![Page 7 - Notifications](screenshots/p7_notif.png)
-*   **মার্কিং গাইড:** 
-    *   **🔔 Bell Icon:** সকল আপডেটের কেন্দ্রবিন্দু।
-    *   **📝 Status Update:** "Results are now available" নোটিফিকেশন।
+### 📄 Page 6: Live Exam & Countdown Security
+**ফিচারসমূহ:**
+*   **Real-time Timer:** প্রতি সেকেন্ডে আপডেট হওয়া লাল রঙের কাউন্টডাউন টাইমার।
+*   **One-Time Entry:** একবার সাবমিট করলে পুনরায় পরীক্ষা দেওয়ার সুযোগ নেই (Secure Attempt)।
+*   **Auto-Calculation:** কতটি সঠিক এবং কতটি ভুল হয়েছে তার স্বয়ংক্রিয় গণনা।
+
+**কাজের পদ্ধতি (Working Process):**
+১. পরীক্ষা চলাকালীন স্ক্রিনের উপরে টাইমার চলতে থাকে।
+২. শিক্ষার্থী রেডিও বাটনের মাধ্যমে উত্তর সিলেক্ট করে এবং নিচে থাকা 'Submit Now' বাটনে ক্লিক করে।
+৩. সিস্টেম তাৎক্ষণিকভাবে তার উত্তরগুলো সংরক্ষিত সঠিক উত্তরের সাথে মিলিয়ে নম্বর হিসাব করে।
+![Page 6 - Live Exam](screenshots/p6_timer.png)
 
 ---
 
-## 🛠 Technical Highlights for Presentation
-*   **Architecture:** MVVM (Model-View-ViewModel).
-*   **Database:** SQLite (Offline Server Mode).
-*   **UI:** 100% Code-based dynamic UI using Material 3.
-*   **Stability:** সড়া বাগ ফিক্সিং এবং হাই-পারফরম্যান্স অপ্টিমাইজেশন।
+### 📄 Page 7: Notification Center & Result Visibility
+**ফিচারসমূহ:**
+*   **Delayed Results:** কনটেস্ট শেষ হওয়ার আগে শিক্ষার্থীদের রেজাল্ট গোপন রাখা।
+*   **Push-Like History:** টিচারের পাঠানো সকল রিমাইন্ডার এবং রেজাল্ট অ্যালার্টের তালিকা।
+*   **Bell Icon Alert:** নোটিফিকেশন আসা মাত্র লাল ডট বা বেল আইকনে আপডেট।
+
+**কাজের পদ্ধতি (Working Process):**
+১. শিক্ষার্থী পরীক্ষা সাবমিট করলে তাকে রেজাল্টের পরিবর্তে 'Submitted' স্ক্রিন দেখানো হয়।
+২. কনটেস্ট শেষ হওয়ার পর টিচার 'Send Reminder' বাটনে ক্লিক করেন।
+৩. শিক্ষার্থীদের বেল আইকনে মেসেজ চলে যায় যে রেজাল্ট এখন দেখা যাচ্ছে।
+![Page 7 - Notifications](screenshots/p7_notif.png)
+
+---
+
+## 🛠 প্রযুক্তিগত বিশেষত্ব (Technical Summary)
+*   **Architecture:** MVVM (Model-View-ViewModel) যা অ্যাপকে অনেক ফাস্ট রাখে।
+*   **Offline Server:** SQLite-এর মাধ্যমে কোনো ইন্টারনেট ছাড়াই সব তথ্য প্রসেস করা হয়।
+*   **Dynamic UI:** কোড-বেজড লেআউট ডিজাইন যা স্ক্রিন সাইজ অনুযায়ী অ্যাডজাস্ট হয়।
 
 ---
 **Developed by:** SPEC Team  
-**Goal:** Making digital examinations secure, easy, and internet-independent.
+**Focus:** Secure, Seamless, and Professional Digital Testing.
