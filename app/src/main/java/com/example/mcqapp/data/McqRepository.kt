@@ -102,7 +102,7 @@ class McqRepository(private val dbHelper: McqDatabase) {
             while (cursor.moveToNext()) {
                 items += SubjectItem(
                     cursor.getLong(0), cursor.getString(1), cursor.getString(2), "",
-                    cursor.getInt(3) == 1, cursor.getLong(4), cursor.getInt(5)
+                    cursor.getInt(3) == 1, cursor.getLong(4), cursor.getInt(5), false, false
                 )
             }
         }
@@ -114,17 +114,19 @@ class McqRepository(private val dbHelper: McqDatabase) {
         db.rawQuery(
             """
             SELECT s.id, s.name, s.subject_code, u.full_name, s.is_contest, s.start_time, s.duration_min,
-            (SELECT COUNT(*) FROM contest_registrations cr WHERE cr.user_id = ? AND cr.subject_id = s.id) as is_reg
+            (SELECT COUNT(*) FROM contest_registrations cr WHERE cr.user_id = ? AND cr.subject_id = s.id) as is_reg,
+            (SELECT COUNT(*) FROM exam_results r WHERE r.user_id = ? AND r.subject_id = s.id) as has_sub
             FROM subjects s
             JOIN users u ON s.teacher_id = u.id
             WHERE s.subject_code = ?
             """.trimIndent(),
-            arrayOf(userId.toString(), subjectCode.trim().uppercase())
+            arrayOf(userId.toString(), userId.toString(), subjectCode.trim().uppercase())
         ).use { cursor ->
             if (cursor.moveToFirst()) {
                 SubjectItem(
                     cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getString(3) ?: "",
-                    cursor.getInt(4) == 1, cursor.getLong(5), cursor.getInt(6), cursor.getInt(7) > 0
+                    cursor.getInt(4) == 1, cursor.getLong(5), cursor.getInt(6), cursor.getInt(7) > 0,
+                    cursor.getInt(8) > 0
                 )
             } else null
         }
@@ -186,19 +188,21 @@ class McqRepository(private val dbHelper: McqDatabase) {
         val items = mutableListOf<SubjectItem>()
         dbHelper.readableDatabase.rawQuery(
             """
-            SELECT s.id, s.name, s.subject_code, u.full_name, s.is_contest, s.start_time, s.duration_min
+            SELECT s.id, s.name, s.subject_code, u.full_name, s.is_contest, s.start_time, s.duration_min,
+            (SELECT COUNT(*) FROM exam_results r WHERE r.user_id = ? AND r.subject_id = s.id) as has_sub
             FROM subjects s
             JOIN users u ON s.teacher_id = u.id
             JOIN contest_registrations cr ON cr.subject_id = s.id
             WHERE cr.user_id = ?
             ORDER BY s.start_time DESC
             """.trimIndent(),
-            arrayOf(userId.toString())
+            arrayOf(userId.toString(), userId.toString())
         ).use { cursor ->
             while (cursor.moveToNext()) {
                 items += SubjectItem(
                     cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getString(3) ?: "",
-                    cursor.getInt(4) == 1, cursor.getLong(5), cursor.getInt(6), true
+                    cursor.getInt(4) == 1, cursor.getLong(5), cursor.getInt(6), true,
+                    cursor.getInt(7) > 0
                 )
             }
         }
@@ -416,6 +420,28 @@ class McqRepository(private val dbHelper: McqDatabase) {
                         put("is_correct", if (selected == qCorrect) 1 else 0)
                     }
                     db.insert("user_answers", null, uaValues)
+                }
+
+                // Check if it's a contest and create a completion reminder
+                db.rawQuery("SELECT name, is_contest, start_time, duration_min FROM subjects WHERE id = ?", arrayOf(subjectId.toString())).use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val name = cursor.getString(0)
+                        val isContest = cursor.getInt(1) == 1
+                        val startTime = cursor.getLong(2)
+                        val duration = cursor.getInt(3)
+                        val endTime = startTime + (duration * 60000)
+                        
+                        if (isContest) {
+                            val msg = "আপনি '$name' কনটেস্টটি সম্পন্ন করেছেন। ফলাফল কনটেস্ট শেষ হওয়ার পর জানানো হবে।"
+                            val remValues = ContentValues().apply {
+                                put("user_id", userId)
+                                put("subject_id", subjectId)
+                                put("message", msg)
+                                put("type", "CONTEST_SUBMITTED")
+                            }
+                            db.insert("reminders", null, remValues)
+                        }
+                    }
                 }
             }
             db.setTransactionSuccessful()

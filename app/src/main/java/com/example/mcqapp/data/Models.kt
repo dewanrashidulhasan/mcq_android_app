@@ -17,7 +17,8 @@ data class SubjectItem(
     val isContest: Boolean = false,
     val startTime: Long = 0, // Timestamp
     val durationMin: Int = 0,
-    val isRegistered: Boolean = false
+    val isRegistered: Boolean = false,
+    val hasSubmitted: Boolean = false
 ) {
     override fun toString(): String = "[$code] $name"
 }

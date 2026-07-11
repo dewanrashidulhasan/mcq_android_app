@@ -170,6 +170,6 @@ class McqDatabase(context: android.content.Context) : SQLiteOpenHelper(context, 
 
     companion object {
         private const val DATABASE_NAME = "mcq_app.db"
-        private const val DATABASE_VERSION = 5
+        private const val DATABASE_VERSION = 6
     }
 }
