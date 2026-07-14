@@ -1,16 +1,16 @@
-#Tue Jul 14 01:09:58 BDT 2026
-path.4=8/classes.dex
-path.3=5/classes.dex
-path.2=13/classes.dex
-path.1=0/classes.dex
-path.0=classes.dex
-base.4=D\:\\Users\\ALL WORKS\\mcq_android_app\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\8\\classes.dex
-base.3=D\:\\Users\\ALL WORKS\\mcq_android_app\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\5\\classes.dex
-base.2=D\:\\Users\\ALL WORKS\\mcq_android_app\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\13\\classes.dex
-base.1=D\:\\Users\\ALL WORKS\\mcq_android_app\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+#Wed Jul 15 03:04:42 BDT 2026
 base.0=D\:\\Users\\ALL WORKS\\mcq_android_app\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
-renamed.3=classes4.dex
-renamed.2=classes3.dex
-renamed.1=classes2.dex
+base.1=D\:\\Users\\ALL WORKS\\mcq_android_app\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+base.2=D\:\\Users\\ALL WORKS\\mcq_android_app\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\13\\classes.dex
+base.3=D\:\\Users\\ALL WORKS\\mcq_android_app\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\5\\classes.dex
+base.4=D\:\\Users\\ALL WORKS\\mcq_android_app\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\8\\classes.dex
+path.0=classes.dex
+path.1=0/classes.dex
+path.2=13/classes.dex
+path.3=5/classes.dex
+path.4=8/classes.dex
 renamed.0=classes.dex
+renamed.1=classes2.dex
+renamed.2=classes3.dex
+renamed.3=classes4.dex
 renamed.4=classes5.dex

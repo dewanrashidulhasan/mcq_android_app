@@ -31,18 +31,20 @@ class MainActivity : AppCompatActivity() {
     private var currentAdminSubjectId: Long? = null
     private var lastBackPressTime: Long = 0
 
-    // Modern Color Palette
-    private val primary = Color.parseColor("#4338CA") // Indigo 700
+    // Production-Grade Color Palette (Inspiration: Microsoft Fluent / Apple SF)
+    private val primary = Color.parseColor("#4F46E5") // Indigo 600
     private val primaryLight = Color.parseColor("#EEF2FF") // Indigo 50
     private val primaryDark = Color.parseColor("#312E81") // Indigo 900
-    private val accent = Color.parseColor("#0ea5e9") // Sky 500
-    private val success = Color.parseColor("#10b981") // Emerald 500
-    private val danger = Color.parseColor("#f43f5e") // Rose 500
-    private val warning = Color.parseColor("#f59e0b") // Amber 500
-    private val ink = Color.parseColor("#0f172a") // Slate 900
-    private val muted = Color.parseColor("#64748b") // Slate 500
+    private val accent = Color.parseColor("#0EA5E9") // Sky 500
+    private val success = Color.parseColor("#10B981") // Emerald 500
+    private val danger = Color.parseColor("#EF4444") // Red 500
+    private val warning = Color.parseColor("#F59E0B") // Amber 500
+    private val ink = Color.parseColor("#0F172A") // Slate 900 (Deep Text)
+    private val inkLight = Color.parseColor("#1E293B") // Slate 800 (Secondary Text)
+    private val muted = Color.parseColor("#64748B") // Slate 500 (Subtle Text)
+    private val border = Color.parseColor("#E2E8F0") // Slate 200 (Borders)
     private val surface = Color.WHITE
-    private val softSurface = Color.parseColor("#f8fafc") // Slate 50
+    private val softSurface = Color.parseColor("#F8FAFC") // Slate 50 (App Background)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,7 +103,7 @@ class MainActivity : AppCompatActivity() {
                 addView(username)
                 addView(password)
                 
-                addView(primaryButton("Login to System", "🔐") {
+                addView(primaryButton("Login", "🔐") {
                     val u = username.text.toString()
                     val p = password.text.toString()
                     if (u.isBlank() || p.isBlank()) {
@@ -219,19 +221,22 @@ class MainActivity : AppCompatActivity() {
                 val navBar = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
-                    setPadding(dp(18), dp(10), dp(18), dp(10))
+                    setPadding(dp(20), dp(8), dp(20), dp(8))
                     background = round(primaryDark, dp(16).toFloat())
-                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(65))
+                    elevation = dp(4).toFloat()
+                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(60)).apply {
+                        setMargins(0, 0, 0, dp(12))
+                    }
 
-                    addView(text("SPEC MCQ Admin", 17f, true, Color.WHITE, Gravity.START))
+                    addView(text("SPEC MCQ Admin", 16f, true, Color.WHITE, Gravity.START))
 
                     val reminderIcon = TextView(this@MainActivity).apply {
                         text = "🔔 Reminders"
-                        textSize = 13f
+                        textSize = 12f
                         setTextColor(Color.WHITE)
                         typeface = Typeface.DEFAULT_BOLD
-                        setPadding(dp(12), dp(6), dp(12), dp(6))
-                        background = round(Color.parseColor("#4338CA"), dp(12).toFloat())
+                        setPadding(dp(14), dp(8), dp(14), dp(8))
+                        background = round(primary, dp(10).toFloat())
                         setOnClickListener { showReminderManagementPage() }
                     }
 
@@ -368,28 +373,32 @@ class MainActivity : AppCompatActivity() {
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, 0, 0, dp(20))
+            setPadding(0, 0, 0, dp(24))
             
             val infoLayout = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
-                addView(text("Welcome, ${user.fullName}", 20f, true, ink, Gravity.START))
-                addView(text("@${user.username}", 14f, false, muted, Gravity.START))
+                addView(text("Welcome back,", 13f, false, muted, Gravity.START))
+                addView(text(user.fullName, 22f, true, ink, Gravity.START))
             }
             addView(infoLayout)
             
             val bellIcon = TextView(this@MainActivity).apply {
                 text = "🔔"
-                textSize = 22f
-                setPadding(dp(12), dp(8), dp(12), dp(8))
+                textSize = 20f
+                setPadding(dp(12), dp(12), dp(12), dp(12))
+                background = round(surface, dp(12).toFloat(), border, dp(1))
                 setOnClickListener { showNotificationsPage() }
             }
             addView(bellIcon)
 
+            addView(View(this@MainActivity).apply { layoutParams = LinearLayout.LayoutParams(dp(10), 1) })
+
             val profileIcon = TextView(this@MainActivity).apply {
                 text = "👤"
-                textSize = 22f
-                setPadding(dp(12), dp(8), dp(12), dp(8))
+                textSize = 20f
+                setPadding(dp(12), dp(12), dp(12), dp(12))
+                background = round(surface, dp(12).toFloat(), border, dp(1))
                 setOnClickListener { showProfilePage() }
             }
             addView(profileIcon)
@@ -412,7 +421,7 @@ class MainActivity : AppCompatActivity() {
                 }
             })
             
-            addView(fancyButton("My Registered Contests", "📋", success, Color.WHITE) { showRegisteredContestsPage() })
+            addView(fancyButton("Registered Contests", "📋", success, Color.WHITE) { showRegisteredContestsPage() })
         })
         
         root.addView(dangerButton("Logout", "🚪") { logout() })
@@ -788,22 +797,76 @@ class MainActivity : AppCompatActivity() {
 
     private fun card(color: Int = surface): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        elevation = dp(4).toFloat()
-        background = round(color, dp(20).toFloat(), if (color == surface) Color.parseColor("#f1f5f9") else color, dp(1))
-        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(18) }
-        setPadding(dp(22), dp(22), dp(22), dp(22))
+        elevation = dp(2).toFloat() // Subtle shadow for enterprise look
+        background = round(color, dp(16).toFloat(), if (color == surface) border else color, dp(1))
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(20) }
+        setPadding(dp(24), dp(24), dp(24), dp(24)) // Increased padding for breathability
     }
 
-    private fun heroCard(title: String, subtitle: String, badge: String, showPicture: Boolean): LinearLayout = card(primaryDark).apply {
-        elevation = dp(8).toFloat()
+    private fun heroCard(title: String, subtitle: String, badge: String, isLogin: Boolean): LinearLayout = card(primaryDark).apply {
+        elevation = dp(4).toFloat()
         val inner = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(dp(10), dp(15), dp(10), dp(15))
-            if (showPicture) addView(pictureSection())
-            addView(chip(badge, accent))
-            addView(text(title, 30f, true, Color.WHITE, Gravity.CENTER))
-            addView(text(subtitle, 14f, false, Color.parseColor("#c7d2fe"), Gravity.CENTER))
+            setPadding(0, dp(15), 0, dp(15))
+            
+            if (isLogin) {
+                // "Welcome to" text
+                addView(text("Welcome to", 16f, false, Color.parseColor("#C7D2FE"), Gravity.CENTER).apply {
+                    alpha = 0.9f
+                })
+                
+                // SPEC MCQ with two colors (White and Sky Blue)
+                val titleLayout = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER
+                    addView(text("SPEC ", 32f, true, Color.WHITE, Gravity.CENTER))
+                    addView(text("MCQ", 32f, true, accent, Gravity.CENTER))
+                }
+                addView(titleLayout)
+                
+                // Decorative Line with Graduation Cap Icon
+                val separator = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(dp(160), dp(30)).apply { 
+                        topMargin = dp(2)
+                        bottomMargin = dp(2)
+                    }
+                    
+                    addView(View(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(0, dp(1), 1f)
+                        setBackgroundColor(Color.parseColor("#4F46E5")) // Darker indigo line
+                    })
+                    addView(text(" 🎓 ", 14f, false, Color.WHITE, Gravity.CENTER))
+                    addView(View(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(0, dp(1), 1f)
+                        setBackgroundColor(Color.parseColor("#4F46E5"))
+                    })
+                }
+                addView(separator)
+
+                // The Modern Exam System Badge
+                addView(TextView(this@MainActivity).apply {
+                    text = badge
+                    textSize = 12f
+                    setTextColor(Color.WHITE)
+                    typeface = Typeface.DEFAULT_BOLD
+                    setPadding(dp(24), dp(8), dp(24), dp(8))
+                    background = round(accent, dp(12).toFloat())
+                    layoutParams = LinearLayout.LayoutParams(-2, -2).apply { 
+                        topMargin = dp(8)
+                        bottomMargin = dp(12)
+                    }
+                })
+            } else {
+                addView(chip(badge, accent))
+                addView(text(title, 26f, true, Color.WHITE, Gravity.CENTER))
+            }
+
+            addView(text(subtitle, 14f, false, Color.parseColor("#C7D2FE"), Gravity.CENTER).apply {
+                alpha = 0.9f
+            })
         }
         addView(inner)
     }
@@ -822,15 +885,17 @@ class MainActivity : AppCompatActivity() {
         addView(ImageView(this@MainActivity).apply {
             setImageResource(R.drawable.spec_logo)
             scaleType = ImageView.ScaleType.CENTER_INSIDE
-            setPadding(dp(8), dp(8), dp(8), dp(8))
+            setPadding(dp(1), dp(1), dp(1), dp(1))
             layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         })
     }
 
     private fun sectionTitle(title: String, subtitle: String): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        addView(text(title, 21f, true, ink, Gravity.START))
-        addView(text(subtitle, 13f, false, muted, Gravity.START))
+        addView(text(title, 20f, true, ink, Gravity.START))
+        addView(text(subtitle, 13f, false, muted, Gravity.START).apply { 
+            setPadding(0, dp(2), 0, dp(12))
+        })
     }
 
     private fun input(hintText: String, password: Boolean = false): EditText = EditText(this).apply {
@@ -839,11 +904,20 @@ class MainActivity : AppCompatActivity() {
         setTextColor(ink)
         setHintTextColor(muted)
         setSingleLine(true)
-        minHeight = dp(58)
-        background = round(surface, dp(14).toFloat(), Color.parseColor("#cbd5e1"), dp(1))
-        setPadding(dp(18), dp(12), dp(18), dp(12))
+        minHeight = dp(56)
+        background = round(surface, dp(12).toFloat(), border, dp(1))
+        setPadding(dp(16), dp(12), dp(16), dp(12))
         inputType = if (password) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD else InputType.TYPE_CLASS_TEXT
         layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) }
+        
+        // Add subtle focus effect logic if possible, otherwise keep clean
+        setOnFocusChangeListener { _, hasFocus ->
+            background = if (hasFocus) {
+                round(surface, dp(12).toFloat(), primary, dp(2))
+            } else {
+                round(surface, dp(12).toFloat(), border, dp(1))
+            }
+        }
     }
 
     private fun primaryButton(label: String, icon: String, action: () -> Unit): MaterialButton = fancyButton(label, icon, primary, Color.WHITE, action)
@@ -859,11 +933,15 @@ class MainActivity : AppCompatActivity() {
         textSize = 14f
         typeface = Typeface.DEFAULT_BOLD
         isAllCaps = false
-        cornerRadius = dp(14)
+        cornerRadius = dp(12)
         setTextColor(txtColor)
         backgroundTintList = ColorStateList.valueOf(bgColor)
-        minHeight = dp(58)
-        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(15) }
+        minHeight = dp(54)
+        elevation = if (bgColor == Color.TRANSPARENT) 0f else dp(2).toFloat()
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) }
+        insetBottom = 0
+        insetTop = 0
+        setPadding(dp(16), 0, dp(16), 0)
         setOnClickListener { action() }
     }
 
@@ -879,10 +957,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun statBox(label: String, value: String): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        background = round(surface, dp(18).toFloat(), Color.parseColor("#e2e8f0"), dp(1))
-        setPadding(dp(16), dp(16), dp(16), dp(16))
-        addView(text(value, 26f, true, primary, Gravity.CENTER))
-        addView(text(label, 12f, false, muted, Gravity.CENTER))
+        background = round(surface, dp(16).toFloat(), border, dp(1))
+        setPadding(dp(16), dp(20), dp(16), dp(20))
+        addView(text(value, 24f, true, primary, Gravity.CENTER))
+        addView(text(label, 11f, true, muted, Gravity.CENTER).apply {
+            isAllCaps = true
+            letterSpacing = 0.05f
+        })
     }
 
     private fun bigScore(value: String): TextView = text(value, 48f, true, primary, Gravity.CENTER).apply {
@@ -914,10 +995,11 @@ class MainActivity : AppCompatActivity() {
         layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) }
     }
 
-    private fun chip(value: String, color: Int): TextView = text(value, 12f, true, Color.WHITE, Gravity.CENTER).apply {
-        background = round(color, dp(12).toFloat())
-        setPadding(dp(14), dp(6), dp(14), dp(6))
-        layoutParams = LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(10) }
+    private fun chip(value: String, color: Int): TextView = text(value.uppercase(), 10f, true, Color.WHITE, Gravity.CENTER).apply {
+        background = round(color, dp(8).toFloat())
+        setPadding(dp(12), dp(4), dp(12), dp(4))
+        letterSpacing = 0.05f
+        layoutParams = LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(12) }
     }
 
     private fun text(v: String, s: Float, b: Boolean, c: Int, g: Int): TextView = TextView(this).apply {
@@ -943,9 +1025,9 @@ class MainActivity : AppCompatActivity() {
     
     private fun spinner(items: List<SubjectItem>): Spinner = Spinner(this).apply {
         adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, items)
-        background = round(softSurface, dp(14).toFloat(), Color.parseColor("#CBD5E1"), dp(1))
-        setPadding(dp(16), dp(10), dp(16), dp(10))
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)).apply { topMargin = dp(10) }
+        background = round(softSurface, dp(12).toFloat(), border, dp(1))
+        setPadding(dp(16), dp(12), dp(16), dp(12))
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54)).apply { topMargin = dp(10) }
     }
     
     private fun subjectSelectorCard(subjects: List<SubjectItem>, selected: SubjectItem?): LinearLayout = card().apply {
