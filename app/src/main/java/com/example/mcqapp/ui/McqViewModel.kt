@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mcqapp.data.*
 import com.example.mcqapp.*
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -14,6 +15,15 @@ class McqViewModel(private val repository: McqRepository, context: Context) : Vi
     private val prefs = context.getSharedPreferences("mcq_prefs", Context.MODE_PRIVATE)
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser
+
+    private val _currentAdminSubjectId = MutableStateFlow<Long?>(null)
+    val currentAdminSubjectId: StateFlow<Long?> = _currentAdminSubjectId
+
+    private val _studentContests = MutableStateFlow<List<SubjectItem>>(emptyList())
+    val studentContests: StateFlow<List<SubjectItem>> = _studentContests
+
+    private val _studentReminders = MutableStateFlow<List<ReminderItem>>(emptyList())
+    val studentReminders: StateFlow<List<ReminderItem>> = _studentReminders
 
     init {
         loadUserSession()
@@ -25,7 +35,7 @@ class McqViewModel(private val repository: McqRepository, context: Context) : Vi
             val username = prefs.getString("username", null)
             val role = prefs.getString("role", null)
             if (username != null && role != null) {
-                _currentUser.value = User(
+                val user = User(
                     id = id,
                     username = username,
                     fullName = prefs.getString("full_name", "") ?: "",
@@ -33,15 +43,35 @@ class McqViewModel(private val repository: McqRepository, context: Context) : Vi
                     phone = prefs.getString("phone", "") ?: "",
                     email = prefs.getString("email", "") ?: ""
                 )
+                _currentUser.value = user
+                // Early Prefetching - Start loading data the moment we know the user session
+                if (role == "Student") {
+                    prefetchStudentData(id)
+                }
             }
         }
     }
 
-    private val _currentAdminSubjectId = MutableStateFlow<Long?>(null)
-    val currentAdminSubjectId: StateFlow<Long?> = _currentAdminSubjectId
+    fun prefetchStudentData(userId: Long, force: Boolean = false) {
+        viewModelScope.launch {
+            val contestsDeferred = async { repository.getRegisteredContests(userId, force) }
+            val remindersDeferred = async { repository.getReminders(userId) }
+            
+            _studentContests.value = contestsDeferred.await()
+            _studentReminders.value = remindersDeferred.await()
+
+            // Setup real-time listeners for God-Speed updates
+            repository.listenToStudentContests(userId) { newList ->
+                _studentContests.value = newList
+            }
+        }
+    }
 
     fun setCurrentUser(user: User?) {
         _currentUser.value = user
+        if (user != null && user.role == "Student") {
+            prefetchStudentData(user.id)
+        }
         with(prefs.edit()) {
             if (user != null) {
                 putLong("user_id", user.id)
@@ -74,17 +104,17 @@ class McqViewModel(private val repository: McqRepository, context: Context) : Vi
         _currentAdminSubjectId.value = id
     }
 
-    fun login(username: String, password: String, onResult: (User?) -> Unit) {
+    fun login(username: String, password: String, onResult: (User?, Int) -> Unit) {
         viewModelScope.launch {
-            val user = repository.login(username, password)
-            onResult(user)
+            val (user, status) = repository.login(username, password)
+            onResult(user, status)
         }
     }
 
-    fun register(username: String, password: String, role: String = "Student", fullName: String = "", onResult: (Boolean) -> Unit) {
+    fun register(username: String, password: String, role: String = "Student", fullName: String = "", onResult: (Int) -> Unit) {
         viewModelScope.launch {
-            val success = repository.createUser(username, password, role, fullName)
-            onResult(success)
+            val status = repository.createUser(username, password, role, fullName)
+            onResult(status)
         }
     }
 
@@ -114,7 +144,9 @@ class McqViewModel(private val repository: McqRepository, context: Context) : Vi
 
     fun registerForContest(userId: Long, subjectId: Long, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            onResult(repository.registerForContest(userId, subjectId))
+            val success = repository.registerForContest(userId, subjectId)
+            if (success) prefetchStudentData(userId)
+            onResult(success)
         }
     }
 
@@ -136,23 +168,34 @@ class McqViewModel(private val repository: McqRepository, context: Context) : Vi
         }
     }
 
-    fun getStats(teacherId: Long? = null, onResult: (Int, Int, Int) -> Unit) {
+    fun getSubjectById(userId: Long, subjectId: Long, onResult: (SubjectItem?) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.getSubjectById(userId, subjectId))
+        }
+    }
+
+    fun getStudentResult(userId: Long, subjectId: Long, onResult: (ExamResultRow?) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.getStudentResult(userId, subjectId))
+        }
+    }
+
+    fun getStats(teacherId: Long? = null, onResult: (Int, Int, Int, Int) -> Unit) {
         viewModelScope.launch {
             if (teacherId != null) {
                 val stats = repository.getTeacherStats(teacherId)
-                onResult(stats.first, stats.second, stats.third)
+                onResult(stats[0], stats[1], stats[2], stats[3])
             } else {
-                // This part was using countRows which I replaced with getTeacherStats logic. 
-                // For global stats we can just pass a null or handle differently.
-                // For now, let's keep it consistent.
-                onResult(0, 0, 0)
+                onResult(0, 0, 0, 0)
             }
         }
     }
 
     fun getStudents(onResult: (List<StudentRow>) -> Unit) {
         viewModelScope.launch {
-            onResult(repository.getStudents())
+            // repository.getStudents() was not implemented in Firebase version yet. 
+            // Return empty for now to avoid crash.
+            onResult(emptyList())
         }
     }
 
@@ -173,9 +216,9 @@ class McqViewModel(private val repository: McqRepository, context: Context) : Vi
         }
     }
 
-    fun deleteQuestion(questionId: Long, onResult: (Boolean) -> Unit) {
+    fun deleteQuestion(subjectId: Long, questionId: Long, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            onResult(repository.deleteQuestion(questionId))
+            onResult(repository.deleteQuestion(subjectId, questionId))
         }
     }
 
@@ -193,7 +236,8 @@ class McqViewModel(private val repository: McqRepository, context: Context) : Vi
 
     fun updateQuestion(questionId: Long, text: String, options: List<String>, correct: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            onResult(repository.updateQuestion(questionId, text, options, correct))
+            // Not implemented in Firebase version yet.
+            onResult(false)
         }
     }
 
@@ -206,26 +250,29 @@ class McqViewModel(private val repository: McqRepository, context: Context) : Vi
     fun saveExamResult(userId: Long, subjectId: Long, total: Int, correct: Int, answers: List<Pair<Long, String>>, onResult: (Double) -> Unit) {
         viewModelScope.launch {
             val percent = repository.saveResult(userId, subjectId, total, correct, answers)
+            prefetchStudentData(userId, true) // Force refresh memory cache to update status immediately
             onResult(percent)
         }
     }
 
     fun getDetailedAnswers(resultId: Long, onResult: (List<UserAnswerDetail>) -> Unit) {
         viewModelScope.launch {
-            onResult(repository.getDetailedAnswersForResult(resultId))
+            // Not implemented in Firebase version yet.
+            onResult(emptyList())
         }
     }
 
     fun getResultCountForUser(userId: Long, onResult: (Int) -> Unit) {
         viewModelScope.launch {
-            onResult(repository.getResultCountForUser(userId))
+            // Not implemented in Firebase version yet.
+            onResult(0)
         }
     }
 
     fun getDetailedResultsForStudent(studentId: Long, onResult: (List<Pair<String, Double>>) -> Unit) {
         viewModelScope.launch {
-            val results = repository.getStudentSubjectResults(studentId)
-            onResult(results)
+            // Not implemented in Firebase version yet.
+            onResult(emptyList())
         }
     }
 

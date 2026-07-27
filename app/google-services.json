@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "668342073801",
+    "project_id": "spec-mcq",
+    "storage_bucket": "spec-mcq.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:668342073801:android:8e8a6779ca5bdbe1f31018",
+        "android_client_info": {
+          "package_name": "com.example.mcqapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVEH5QLvguNyOtALAN6zthSMzC5aqqFq0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

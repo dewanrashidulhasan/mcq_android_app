@@ -1,459 +1,520 @@
 package com.example.mcqapp.data
 
-import android.content.ContentValues
-import android.database.sqlite.SQLiteDatabase
-import com.example.mcqapp.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.*
+import kotlinx.coroutines.tasks.await
 import org.mindrot.jbcrypt.BCrypt
 import java.util.Locale
 
-class McqRepository(private val dbHelper: McqDatabase) {
+class McqRepository(private val dbHelper: McqDatabase) { // dbHelper remains for now to avoid large refactor errors, but we use Firebase
+
+    private val database = FirebaseDatabase.getInstance().reference
+    private val teacherNameCache = mutableMapOf<Long, String>()
+    
+    // Hyper-Optimization Cache
+    private var cachedRegisteredContests: List<SubjectItem>? = null
+    private var lastContestFetchTime: Long = 0
+    private val CACHE_EXPIRY = 60000L // 1 minute cache
 
     suspend fun createUser(
         username: String,
         password: String,
         role: String,
         fullName: String = ""
-    ): Boolean = withContext(Dispatchers.IO) {
-        if (username.isBlank() || password.length < 4) return@withContext false
+    ): Int = withContext(Dispatchers.IO) { // Changed return type to Int for status codes
+        try {
+            if (username.isBlank() || password.length < 4) return@withContext 2 // Invalid input
+            
+            val userQuery = database.child("users").orderByChild("username").equalTo(username.trim()).get().await()
+            if (userQuery.exists()) return@withContext 1 // Already exists
 
-        val values = ContentValues().apply {
-            put("full_name", fullName.trim())
-            put("username", username.trim())
-            put("password_hash", BCrypt.hashpw(password, BCrypt.gensalt(12)))
-            put("role", role)
+            val userId = database.child("users").push().key?.hashCode()?.toLong()?.let { if (it < 0) -it else it } ?: System.currentTimeMillis()
+            val userMap = mapOf(
+                "id" to userId,
+                "full_name" to fullName.trim(),
+                "username" to username.trim(),
+                "password_hash" to BCrypt.hashpw(password, BCrypt.gensalt(10)),
+                "role" to role,
+                "phone" to "",
+                "email" to ""
+            )
+            
+            database.child("users").child(userId.toString()).setValue(userMap).await()
+            0 // Success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            -1 // Firebase/Network error
         }
-        runCatching {
-            val db = dbHelper.writableDatabase
-            db.insertOrThrow("users", null, values) > 0
-        }.getOrDefault(false)
     }
 
-    suspend fun login(username: String, password: String): User? = withContext(Dispatchers.IO) {
-        dbHelper.readableDatabase.rawQuery(
-            "SELECT id, username, full_name, role, phone, email FROM users WHERE username = ?",
-            arrayOf(username.trim())
-        ).use { cursor ->
-            if (!cursor.moveToFirst()) return@withContext null
-
-            val hash = dbHelper.readableDatabase.rawQuery("SELECT password_hash FROM users WHERE username = ?", arrayOf(username.trim())).use { hCursor ->
-                if (hCursor.moveToFirst()) hCursor.getString(0) else null
-            } ?: return@withContext null
+    suspend fun login(username: String, password: String): Pair<User?, Int> = withContext(Dispatchers.IO) {
+        try {
+            val snapshot = database.child("users").orderByChild("username").equalTo(username.trim()).get().await()
+            if (!snapshot.exists() || snapshot.childrenCount == 0L) return@withContext null to 1 // User not found
             
-            if (!BCrypt.checkpw(password, hash)) return@withContext null
+            val userSnap = snapshot.children.firstOrNull() ?: return@withContext null to 1
+            
+            val hash = userSnap.child("password_hash").value as? String ?: return@withContext null to 2 // Invalid data
+            if (!BCrypt.checkpw(password, hash)) return@withContext null to 3 // Wrong password
 
-            User(
-                id = cursor.getLong(0),
-                username = cursor.getString(1),
-                fullName = cursor.getString(2) ?: "",
-                role = cursor.getString(3),
-                phone = cursor.getString(4) ?: "",
-                email = cursor.getString(5) ?: ""
+            val user = User(
+                id = (userSnap.child("id").value as? Number)?.toLong() ?: 0L,
+                username = userSnap.child("username").value as? String ?: "",
+                fullName = userSnap.child("full_name").value as? String ?: "",
+                role = userSnap.child("role").value as? String ?: "",
+                phone = userSnap.child("phone").value as? String ?: "",
+                email = userSnap.child("email").value as? String ?: ""
             )
+            user to 0 // Success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null to -1 // Database error
         }
     }
 
     suspend fun updateUserProfile(userId: Long, phone: String, email: String): Boolean = withContext(Dispatchers.IO) {
-        val values = ContentValues().apply {
-            put("phone", phone.trim())
-            put("email", email.trim())
-        }
+        val updates = mapOf(
+            "phone" to phone.trim(),
+            "email" to email.trim()
+        )
         runCatching {
-            dbHelper.writableDatabase.update("users", values, "id = ?", arrayOf(userId.toString())) > 0
+            database.child("users").child(userId.toString()).updateChildren(updates).await()
+            true
         }.getOrDefault(false)
     }
 
     suspend fun addSubject(teacherId: Long, name: String, code: String, isContest: Boolean = false, startTime: Long = 0, duration: Int = 0): Boolean = withContext(Dispatchers.IO) {
         if (name.isBlank() || code.isBlank()) return@withContext false
-        val values = ContentValues().apply { 
-            put("teacher_id", teacherId)
-            put("name", name.trim()) 
-            put("subject_code", code.trim().uppercase())
-            put("is_contest", if (isContest) 1 else 0)
-            put("start_time", startTime)
-            put("duration_min", duration)
-        }
+        
+        val codeQuery = database.child("subjects").orderByChild("subject_code").equalTo(code.trim().uppercase()).get().await()
+        if (codeQuery.exists()) return@withContext false
+
+        val subjectId = database.child("subjects").push().key?.hashCode()?.toLong()?.let { if (it < 0) -it else it } ?: System.currentTimeMillis()
+        val subjectMap = mapOf(
+            "id" to subjectId,
+            "teacher_id" to teacherId,
+            "name" to name.trim(),
+            "subject_code" to code.trim().uppercase(),
+            "is_contest" to isContest,
+            "start_time" to startTime,
+            "duration_min" to duration
+        )
+        
         runCatching {
-            val db = dbHelper.writableDatabase
-            db.insertOrThrow("subjects", null, values) > 0
+            database.child("subjects").child(subjectId.toString()).setValue(subjectMap).await()
+            true
         }.getOrDefault(false)
     }
 
     suspend fun updateSubject(subjectId: Long, name: String, code: String, isContest: Boolean, startTime: Long, duration: Int): Boolean = withContext(Dispatchers.IO) {
-        val values = ContentValues().apply {
-            put("name", name.trim())
-            put("subject_code", code.trim().uppercase())
-            put("is_contest", if (isContest) 1 else 0)
-            put("start_time", startTime)
-            put("duration_min", duration)
-        }
+        val updates = mapOf(
+            "name" to name.trim(),
+            "subject_code" to code.trim().uppercase(),
+            "is_contest" to isContest,
+            "start_time" to startTime,
+            "duration_min" to duration
+        )
         runCatching {
-            dbHelper.writableDatabase.update("subjects", values, "id = ?", arrayOf(subjectId.toString())) > 0
+            database.child("subjects").child(subjectId.toString()).updateChildren(updates).await()
+            true
         }.getOrDefault(false)
     }
 
     suspend fun getSubjectsForTeacher(teacherId: Long): List<SubjectItem> = withContext(Dispatchers.IO) {
-        val items = mutableListOf<SubjectItem>()
-        dbHelper.readableDatabase.rawQuery(
-            "SELECT id, name, subject_code, is_contest, start_time, duration_min FROM subjects WHERE teacher_id = ? ORDER BY id", 
-            arrayOf(teacherId.toString())
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                items += SubjectItem(
-                    cursor.getLong(0), cursor.getString(1), cursor.getString(2), "",
-                    cursor.getInt(3) == 1, cursor.getLong(4), cursor.getInt(5), false, false
+        try {
+            val teacherName = teacherNameCache[teacherId] ?: database.child("users").child(teacherId.toString()).child("full_name").get().await().value as? String ?: ""
+            if (teacherName.isNotEmpty()) teacherNameCache[teacherId] = teacherName
+
+            val snapshot = database.child("subjects").orderByChild("teacher_id").equalTo(teacherId.toDouble()).get().await()
+            snapshot.children.mapNotNull { snap ->
+                val id = (snap.child("id").value as? Number)?.toLong() ?: return@mapNotNull null
+                SubjectItem(
+                    id = id,
+                    name = snap.child("name").value as? String ?: "Untitled",
+                    code = snap.child("subject_code").value as? String ?: "",
+                    teacherName = teacherName,
+                    isContest = snap.child("is_contest").value as? Boolean ?: false,
+                    startTime = (snap.child("start_time").value as? Number)?.toLong() ?: 0L,
+                    durationMin = (snap.child("duration_min").value as? Number)?.toInt() ?: 0,
+                    isRegistered = false,
+                    hasSubmitted = false
                 )
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
-        items
     }
 
-    suspend fun searchSubject(userId: Long, subjectCode: String): SubjectItem? = withContext(Dispatchers.IO) {
-        val db = dbHelper.readableDatabase
-        db.rawQuery(
-            """
-            SELECT s.id, s.name, s.subject_code, u.full_name, s.is_contest, s.start_time, s.duration_min,
-            (SELECT COUNT(*) FROM contest_registrations cr WHERE cr.user_id = ? AND cr.subject_id = s.id) as is_reg,
-            (SELECT COUNT(*) FROM exam_results r WHERE r.user_id = ? AND r.subject_id = s.id) as has_sub
-            FROM subjects s
-            JOIN users u ON s.teacher_id = u.id
-            WHERE s.subject_code = ?
-            """.trimIndent(),
-            arrayOf(userId.toString(), userId.toString(), subjectCode.trim().uppercase())
-        ).use { cursor ->
-            if (cursor.moveToFirst()) {
-                SubjectItem(
-                    cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getString(3) ?: "",
-                    cursor.getInt(4) == 1, cursor.getLong(5), cursor.getInt(6), cursor.getInt(7) > 0,
-                    cursor.getInt(8) > 0
-                )
-            } else null
+    suspend fun getSubjectById(userId: Long, subjectId: Long): SubjectItem? = withContext(Dispatchers.IO) {
+        val subSnap = database.child("subjects").child(subjectId.toString()).get().await()
+        if (!subSnap.exists()) return@withContext null
+        
+        val teacherId = (subSnap.child("teacher_id").value as? Number)?.toLong() ?: return@withContext null
+        val teacherName = database.child("users").child(teacherId.toString()).child("full_name").get().await().value as? String ?: ""
+        
+        val isReg = database.child("registrations").child(userId.toString()).child(subjectId.toString()).get().await().exists()
+        val hasSub = database.child("results").child(userId.toString()).child(subjectId.toString()).get().await().exists()
+
+        SubjectItem(
+            id = subjectId,
+            name = subSnap.child("name").value as? String ?: "Untitled",
+            code = subSnap.child("subject_code").value as? String ?: "",
+            teacherName = teacherName,
+            isContest = subSnap.child("is_contest").value as? Boolean ?: false,
+            startTime = (subSnap.child("start_time").value as? Number)?.toLong() ?: 0L,
+            durationMin = (subSnap.child("duration_min").value as? Number)?.toInt() ?: 0,
+            isRegistered = isReg,
+            hasSubmitted = hasSub
+        )
+    }
+
+    suspend fun searchSubject(userId: Long, subjectCode: String): SubjectItem? = coroutineScope {
+        try {
+            val code = subjectCode.trim().uppercase()
+            val snapshot = database.child("subjects").orderByChild("subject_code").equalTo(code).get().await()
+            val subSnap = snapshot.children.firstOrNull() ?: return@coroutineScope null
+            
+            val subjectIdStr = subSnap.key ?: return@coroutineScope null
+            val teacherId = (subSnap.child("teacher_id").value as? Number)?.toLong() ?: 0L
+
+            // Fetch supplementary info in parallel
+            val teacherNameDef = async(Dispatchers.IO) {
+                teacherNameCache[teacherId] ?: database.child("users").child(teacherId.toString()).child("full_name").get().await().value as? String ?: ""
+            }
+            val isRegDef = async(Dispatchers.IO) {
+                database.child("registrations").child(userId.toString()).child(subjectIdStr).get().await().exists()
+            }
+            val hasSubDef = async(Dispatchers.IO) {
+                database.child("results").child(userId.toString()).child(subjectIdStr).get().await().exists()
+            }
+
+            val teacherName = teacherNameDef.await()
+            if (teacherName.isNotEmpty()) teacherNameCache[teacherId] = teacherName
+
+            SubjectItem(
+                id = subjectIdStr.toLongOrNull() ?: 0L,
+                name = subSnap.child("name").value as? String ?: "Untitled",
+                code = subSnap.child("subject_code").value as? String ?: "",
+                teacherName = teacherName,
+                isContest = subSnap.child("is_contest").value as? Boolean ?: false,
+                startTime = (subSnap.child("start_time").value as? Number)?.toLong() ?: 0L,
+                durationMin = (subSnap.child("duration_min").value as? Number)?.toInt() ?: 0,
+                isRegistered = isRegDef.await(),
+                hasSubmitted = hasSubDef.await()
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 
     suspend fun registerForContest(userId: Long, subjectId: Long): Boolean = withContext(Dispatchers.IO) {
-        val values = ContentValues().apply {
-            put("user_id", userId)
-            put("subject_id", subjectId)
-        }
         runCatching {
-            dbHelper.writableDatabase.insertOrThrow("contest_registrations", null, values) > 0
+            database.child("registrations").child(userId.toString()).child(subjectId.toString()).setValue(true).await()
+            true
         }.getOrDefault(false)
     }
 
     suspend fun sendReminder(teacherId: Long, subjectId: Long, message: String): Int = withContext(Dispatchers.IO) {
-        val db = dbHelper.writableDatabase
+        val regs = database.child("registrations").get().await()
         var count = 0
-        db.rawQuery(
-            "SELECT user_id FROM contest_registrations WHERE subject_id = ?",
-            arrayOf(subjectId.toString())
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                val values = ContentValues().apply {
-                    put("user_id", cursor.getLong(0))
-                    put("subject_id", subjectId)
-                    put("message", message)
-                    put("type", "REMINDER")
-                }
-                if (db.insert("reminders", null, values) > 0) count++
+        regs.children.forEach { userRegs ->
+            if (userRegs.hasChild(subjectId.toString())) {
+                val userId = userRegs.key ?: return@forEach
+                val reminderId = database.child("reminders").child(userId).push().key ?: return@forEach
+                val reminderMap = mapOf(
+                    "id" to reminderId.hashCode().toLong(),
+                    "subject_id" to subjectId,
+                    "message" to message,
+                    "type" to "REMINDER",
+                    "created_at" to System.currentTimeMillis().toString()
+                )
+                database.child("reminders").child(userId).child(reminderId).setValue(reminderMap).await()
+                count++
             }
         }
         count
     }
 
     suspend fun getReminders(userId: Long): List<ReminderItem> = withContext(Dispatchers.IO) {
-        val items = mutableListOf<ReminderItem>()
-        dbHelper.readableDatabase.rawQuery(
-            """
-            SELECT r.id, r.subject_id, s.name, r.message, r.type, r.created_at
-            FROM reminders r
-            JOIN subjects s ON r.subject_id = s.id
-            WHERE r.user_id = ?
-            ORDER BY r.created_at DESC
-            """.trimIndent(),
-            arrayOf(userId.toString())
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                items += ReminderItem(
-                    cursor.getLong(0), cursor.getLong(1), cursor.getString(2),
-                    cursor.getString(3), cursor.getString(4), cursor.getString(5)
+        try {
+            val snapshot = database.child("reminders").child(userId.toString()).get().await()
+            if (!snapshot.exists()) return@withContext emptyList()
+
+            // Fetch all subjects once to avoid N+1 requests for subject names
+            val subjectsSnapshot = database.child("subjects").get().await()
+            val subjectNames = subjectsSnapshot.children.associate { 
+                it.key to (it.child("name").value as? String ?: "Unknown")
+            }
+
+            snapshot.children.mapNotNull { snap ->
+                val sid = (snap.child("subject_id").value as? Number)?.toLong() ?: return@mapNotNull null
+                val sname = subjectNames[sid.toString()] ?: "Unknown"
+                val id = (snap.child("id").value as? Number)?.toLong() ?: return@mapNotNull null
+                ReminderItem(
+                    id = id,
+                    subjectId = sid,
+                    subjectName = sname,
+                    message = snap.child("message").value as? String ?: "",
+                    type = snap.child("type").value as? String ?: "REMINDER",
+                    timestamp = snap.child("created_at").value as? String ?: ""
                 )
+            }.reversed()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    suspend fun getRegisteredContests(userId: Long, forceRefresh: Boolean = false): List<SubjectItem> = coroutineScope {
+        try {
+            // Instant memory return if not force refresh
+            if (!forceRefresh && cachedRegisteredContests != null && (System.currentTimeMillis() - lastContestFetchTime < CACHE_EXPIRY)) {
+                return@coroutineScope cachedRegisteredContests!!
             }
-        }
-        items
-    }
 
-    suspend fun getRegisteredContests(userId: Long): List<SubjectItem> = withContext(Dispatchers.IO) {
-        val items = mutableListOf<SubjectItem>()
-        dbHelper.readableDatabase.rawQuery(
-            """
-            SELECT s.id, s.name, s.subject_code, u.full_name, s.is_contest, s.start_time, s.duration_min,
-            (SELECT COUNT(*) FROM exam_results r WHERE r.user_id = ? AND r.subject_id = s.id) as has_sub
-            FROM subjects s
-            JOIN users u ON s.teacher_id = u.id
-            JOIN contest_registrations cr ON cr.subject_id = s.id
-            WHERE cr.user_id = ?
-            ORDER BY s.start_time DESC
-            """.trimIndent(),
-            arrayOf(userId.toString(), userId.toString())
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                items += SubjectItem(
-                    cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getString(3) ?: "",
-                    cursor.getInt(4) == 1, cursor.getLong(5), cursor.getInt(6), true,
-                    cursor.getInt(7) > 0
-                )
+            val regSnapshot = database.child("registrations").child(userId.toString()).get().await()
+            if (!regSnapshot.exists()) {
+                cachedRegisteredContests = emptyList()
+                return@coroutineScope emptyList<SubjectItem>()
             }
-        }
-        items
-    }
-
-    suspend fun getTeacherStats(teacherId: Long): Triple<Int, Int, Int> = withContext(Dispatchers.IO) {
-        val db = dbHelper.readableDatabase
-        val subjectCount = db.rawQuery("SELECT COUNT(*) FROM subjects WHERE teacher_id = ?", arrayOf(teacherId.toString())).use { cursor ->
-            if (cursor.moveToFirst()) cursor.getInt(0) else 0
-        }
-        val questionCount = db.rawQuery(
-            "SELECT COUNT(*) FROM questions q JOIN subjects s ON q.subject_id = s.id WHERE s.teacher_id = ?",
-            arrayOf(teacherId.toString())
-        ).use { cursor ->
-            if (cursor.moveToFirst()) cursor.getInt(0) else 0
-        }
-        val studentCount = db.rawQuery(
-            "SELECT COUNT(DISTINCT user_id) FROM exam_results er JOIN subjects s ON er.subject_id = s.id WHERE s.teacher_id = ?",
-            arrayOf(teacherId.toString())
-        ).use { cursor ->
-            if (cursor.moveToFirst()) cursor.getInt(0) else 0
-        }
-         Triple(subjectCount, questionCount, studentCount)
-    }
-
-    suspend fun getStudents(): List<StudentRow> = withContext(Dispatchers.IO) {
-        val students = mutableListOf<StudentRow>()
-        dbHelper.readableDatabase.rawQuery(
-            """
-            SELECT users.id, users.username, COUNT(exam_results.id) AS exam_count
-            FROM users
-            LEFT JOIN exam_results ON exam_results.user_id = users.id
-            WHERE users.role = 'Student'
-            GROUP BY users.id, users.username
-            ORDER BY users.username COLLATE NOCASE
-            """.trimIndent(),
-            null
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                students += StudentRow(cursor.getLong(0), cursor.getString(1), cursor.getInt(2))
+            
+            val regIds = regSnapshot.children.mapNotNull { it.key }
+            if (regIds.isEmpty()) {
+                cachedRegisteredContests = emptyList()
+                return@coroutineScope emptyList<SubjectItem>()
             }
+
+            val resultsSnapshot = database.child("results").child(userId.toString()).get().await()
+
+            // Ultra-Fast: Parallel single node fetching
+            val deferredSubjects = regIds.map { idStr ->
+                async(Dispatchers.IO) {
+                    try {
+                        val subId = idStr.toLongOrNull() ?: return@async null
+                        val subSnap = database.child("subjects").child(idStr).get().await()
+                        if (!subSnap.exists()) return@async null
+                        
+                        val teacherId = (subSnap.child("teacher_id").value as? Number)?.toLong() ?: 0L
+                        val teacherName = teacherNameCache[teacherId] ?: database.child("users").child(teacherId.toString()).child("full_name").get().await().value as? String ?: ""
+                        if (teacherName.isNotEmpty()) teacherNameCache[teacherId] = teacherName
+                        
+                        val hasSub = resultsSnapshot.hasChild(idStr)
+                        
+                        SubjectItem(
+                            id = subId,
+                            name = subSnap.child("name").value as? String ?: "Untitled",
+                            code = subSnap.child("subject_code").value as? String ?: "",
+                            teacherName = teacherName,
+                            isContest = subSnap.child("is_contest").value as? Boolean ?: false,
+                            startTime = (subSnap.child("start_time").value as? Number)?.toLong() ?: 0L,
+                            durationMin = (subSnap.child("duration_min").value as? Number)?.toInt() ?: 0,
+                            isRegistered = true,
+                            hasSubmitted = hasSub
+                        )
+                    } catch (e: Exception) { null }
+                }
+            }
+            
+            val results = deferredSubjects.awaitAll().filterNotNull()
+            cachedRegisteredContests = results
+            lastContestFetchTime = System.currentTimeMillis()
+            results
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList<SubjectItem>()
         }
-        students
     }
 
-    suspend fun getResultCountForUser(userId: Long): Int = withContext(Dispatchers.IO) {
-        dbHelper.readableDatabase.rawQuery("SELECT COUNT(*) FROM exam_results WHERE user_id = ?", arrayOf(userId.toString())).use { cursor ->
-            if (cursor.moveToFirst()) cursor.getInt(0) else 0
+    fun listenToStudentContests(userId: Long, onUpdate: (List<SubjectItem>) -> Unit) {
+        val regRef = database.child("registrations").child(userId.toString())
+        regRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                GlobalScope.launch(Dispatchers.IO) {
+                    onUpdate(getRegisteredContests(userId, true))
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
+
+    suspend fun getTeacherStats(teacherId: Long): List<Int> = withContext(Dispatchers.IO) {
+        try {
+            val subjects = getSubjectsForTeacher(teacherId)
+            val sCount = subjects.size
+            val cCount = subjects.count { it.isContest }
+            
+            // Batch fetch all questions once
+            val allQuestionsSnapshot = database.child("questions").get().await()
+            var qCount = 0
+            subjects.forEach { s ->
+                qCount += allQuestionsSnapshot.child(s.id.toString()).childrenCount.toInt()
+            }
+            
+            // Batch fetch all results once
+            val resultsSnapshot = database.child("results").get().await()
+            val studentIds = mutableSetOf<String>()
+            resultsSnapshot.children.forEach { userResults ->
+                val userId = userResults.key ?: return@forEach
+                subjects.forEach { s ->
+                    if (userResults.hasChild(s.id.toString())) {
+                        studentIds.add(userId)
+                    }
+                }
+            }
+            
+            listOf(sCount, qCount, studentIds.size, cCount)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            listOf(0, 0, 0, 0)
         }
     }
 
     suspend fun getResultsForSubject(subjectId: Long): List<ExamResultRow> = withContext(Dispatchers.IO) {
-        val results = mutableListOf<ExamResultRow>()
-        dbHelper.readableDatabase.rawQuery(
-            """
-            SELECT exam_results.id, users.username, exam_results.total, exam_results.correct, exam_results.percent, exam_results.submitted_at
-            FROM exam_results
-            INNER JOIN users ON users.id = exam_results.user_id
-            WHERE exam_results.subject_id = ?
-            ORDER BY exam_results.submitted_at DESC
-            """.trimIndent(),
-            arrayOf(subjectId.toString())
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                results += ExamResultRow(
-                    cursor.getLong(0),
-                    cursor.getString(1),
-                    cursor.getInt(2),
-                    cursor.getInt(3),
-                    cursor.getDouble(4),
-                    cursor.getString(5)
-                )
+        try {
+            val resultsSnapshot = database.child("results").get().await()
+            val allUsersSnapshot = database.child("users").get().await()
+            
+            val usernames = allUsersSnapshot.children.associate { 
+                it.key to (it.child("username").value as? String ?: "Unknown")
             }
+
+            val results = mutableListOf<ExamResultRow>()
+            resultsSnapshot.children.forEach { userResults ->
+                val resSnap = userResults.child(subjectId.toString())
+                if (resSnap.exists()) {
+                    val userId = userResults.key ?: return@forEach
+                    results += ExamResultRow(
+                        resultId = (resSnap.child("id").value as? Number)?.toLong() ?: 0L,
+                        username = usernames[userId] ?: "Unknown",
+                        total = (resSnap.child("total").value as? Number)?.toInt() ?: 0,
+                        correct = (resSnap.child("correct").value as? Number)?.toInt() ?: 0,
+                        percent = (resSnap.child("percent").value as? Number)?.toDouble() ?: 0.0,
+                        submittedAt = resSnap.child("submitted_at").value as? String ?: ""
+                    )
+                }
+            }
+            results.sortedByDescending { it.submittedAt }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
-        results
     }
 
-    suspend fun getDetailedAnswersForResult(resultId: Long): List<UserAnswerDetail> = withContext(Dispatchers.IO) {
-        val answers = mutableListOf<UserAnswerDetail>()
-        dbHelper.readableDatabase.rawQuery(
-            """
-            SELECT q.question_text, ua.selected_option, q.correct_option, ua.is_correct
-            FROM user_answers ua
-            JOIN questions q ON ua.question_id = q.id
-            WHERE ua.result_id = ?
-            ORDER BY ua.id
-            """.trimIndent(),
-            arrayOf(resultId.toString())
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                answers += UserAnswerDetail(
-                    cursor.getString(0),
-                    cursor.getString(1),
-                    cursor.getString(2),
-                    cursor.getInt(3) == 1
-                )
-            }
+    suspend fun getStudentResult(userId: Long, subjectId: Long): ExamResultRow? = withContext(Dispatchers.IO) {
+        try {
+            val snap = database.child("results").child(userId.toString()).child(subjectId.toString()).get().await()
+            if (!snap.exists()) return@withContext null
+            ExamResultRow(
+                resultId = (snap.child("id").value as? Number)?.toLong() ?: 0L,
+                username = "", // Not needed for individual view
+                total = (snap.child("total").value as? Number)?.toInt() ?: 0,
+                correct = (snap.child("correct").value as? Number)?.toInt() ?: 0,
+                percent = (snap.child("percent").value as? Number)?.toDouble() ?: 0.0,
+                submittedAt = snap.child("submitted_at").value as? String ?: ""
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
-        answers
-    }
-
-    suspend fun getStudentSubjectResults(userId: Long): List<Pair<String, Double>> = withContext(Dispatchers.IO) {
-        val results = mutableListOf<Pair<String, Double>>()
-        dbHelper.readableDatabase.rawQuery(
-            """
-            SELECT subjects.name, exam_results.percent
-            FROM exam_results
-            INNER JOIN subjects ON subjects.id = exam_results.subject_id
-            WHERE exam_results.user_id = ?
-            ORDER BY subjects.name COLLATE NOCASE
-            """.trimIndent(),
-            arrayOf(userId.toString())
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                results += (cursor.getString(0) to cursor.getDouble(1))
-            }
-        }
-        results
     }
 
     suspend fun addQuestion(subjectId: Long, text: String, options: List<String>, correct: String): Boolean = withContext(Dispatchers.IO) {
-        val normalizedCorrect = correct.trim().uppercase(Locale.US)
-        if (subjectId <= 0 || text.isBlank() || options.size != 4 || options.any { it.isBlank() } || normalizedCorrect !in listOf("A", "B", "C", "D")) {
-            return@withContext false
-        }
-        val values = ContentValues().apply {
-            put("subject_id", subjectId)
-            put("question_text", text.trim())
-            put("option_a", options[0].trim())
-            put("option_b", options[1].trim())
-            put("option_c", options[2].trim())
-            put("option_d", options[3].trim())
-            put("correct_option", normalizedCorrect)
-        }
+        val questionId = database.child("questions").child(subjectId.toString()).push().key?.hashCode()?.toLong()?.let { if (it < 0) -it else it } ?: System.currentTimeMillis()
+        val questionMap = mapOf(
+            "id" to questionId,
+            "subject_id" to subjectId,
+            "text" to text.trim(),
+            "optionA" to options[0],
+            "optionB" to options[1],
+            "optionC" to options[2],
+            "optionD" to options[3],
+            "correctOption" to correct.uppercase()
+        )
         runCatching {
-            val db = dbHelper.writableDatabase
-            db.insertOrThrow("questions", null, values) > 0
+            database.child("questions").child(subjectId.toString()).child(questionId.toString()).setValue(questionMap).await()
+            true
         }.getOrDefault(false)
     }
 
-    suspend fun deleteQuestion(questionId: Long): Boolean = withContext(Dispatchers.IO) {
+    suspend fun deleteQuestion(subjectId: Long, questionId: Long): Boolean = withContext(Dispatchers.IO) {
         runCatching {
-            val db = dbHelper.writableDatabase
-            db.delete("questions", "id = ?", arrayOf(questionId.toString())) > 0
-        }.getOrDefault(false)
-    }
-
-    suspend fun deleteSubject(subjectId: Long): Boolean = withContext(Dispatchers.IO) {
-        runCatching {
-            val db = dbHelper.writableDatabase
-            db.delete("subjects", "id = ?", arrayOf(subjectId.toString())) > 0
-        }.getOrDefault(false)
-    }
-
-    suspend fun updateQuestion(questionId: Long, text: String, options: List<String>, correct: String): Boolean = withContext(Dispatchers.IO) {
-        val normalizedCorrect = correct.trim().uppercase(Locale.US)
-        val values = ContentValues().apply {
-            put("question_text", text.trim())
-            put("option_a", options[0].trim())
-            put("option_b", options[1].trim())
-            put("option_c", options[2].trim())
-            put("option_d", options[3].trim())
-            put("correct_option", normalizedCorrect)
-        }
-        runCatching {
-            dbHelper.writableDatabase.update("questions", values, "id = ?", arrayOf(questionId.toString())) > 0
+            database.child("questions").child(subjectId.toString()).child(questionId.toString()).removeValue().await()
+            true
         }.getOrDefault(false)
     }
 
     suspend fun getQuestions(subjectId: Long): List<Question> = withContext(Dispatchers.IO) {
-        val questions = mutableListOf<Question>()
-        dbHelper.readableDatabase.rawQuery(
-            """
-            SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option
-            FROM questions
-            WHERE subject_id = ?
-            ORDER BY id
-            """.trimIndent(),
-            arrayOf(subjectId.toString())
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                questions += Question(
-                    cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getString(3),
-                    cursor.getString(4), cursor.getString(5), cursor.getString(6)
-                )
-            }
+        val snapshot = database.child("questions").child(subjectId.toString()).get().await()
+        snapshot.children.mapNotNull { snap ->
+            val id = (snap.child("id").value as? Number)?.toLong() ?: return@mapNotNull null
+            Question(
+                id = id,
+                text = snap.child("text").value as? String ?: "",
+                optionA = snap.child("optionA").value as? String ?: "",
+                optionB = snap.child("optionB").value as? String ?: "",
+                optionC = snap.child("optionC").value as? String ?: "",
+                optionD = snap.child("optionD").value as? String ?: "",
+                correctOption = snap.child("correctOption").value as? String ?: "A"
+            )
         }
-        questions
     }
 
     suspend fun saveResult(userId: Long, subjectId: Long, total: Int, correct: Int, answers: List<Pair<Long, String>>): Double = withContext(Dispatchers.IO) {
         val percent = if (total == 0) 0.0 else (correct * 100.0) / total
-        val db = dbHelper.writableDatabase
-        db.beginTransaction()
-        try {
-            val values = ContentValues().apply {
-                put("user_id", userId)
-                put("subject_id", subjectId)
-                put("total", total)
-                put("correct", correct)
-                put("percent", percent)
-            }
-            val resultId = db.insert("exam_results", null, values)
-            
-            if (resultId > 0) {
-                answers.forEach { (qId, selected) ->
-                    val qCorrect = db.rawQuery("SELECT correct_option FROM questions WHERE id = ?", arrayOf(qId.toString())).use { cursor ->
-                        if (cursor.moveToFirst()) cursor.getString(0) else ""
-                    }
-                    val uaValues = ContentValues().apply {
-                        put("result_id", resultId)
-                        put("question_id", qId)
-                        put("selected_option", selected)
-                        put("is_correct", if (selected == qCorrect) 1 else 0)
-                    }
-                    db.insert("user_answers", null, uaValues)
-                }
-
-                // Check if it's a contest and create a completion reminder
-                db.rawQuery("SELECT name, is_contest, start_time, duration_min FROM subjects WHERE id = ?", arrayOf(subjectId.toString())).use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val name = cursor.getString(0)
-                        val isContest = cursor.getInt(1) == 1
-                        val startTime = cursor.getLong(2)
-                        val duration = cursor.getInt(3)
-                        val endTime = startTime + (duration * 60000)
-                        
-                        if (isContest) {
-                            val msg = "আপনি '$name' কনটেস্টটি সম্পন্ন করেছেন। ফলাফল কনটেস্ট শেষ হওয়ার পর জানানো হবে।"
-                            val remValues = ContentValues().apply {
-                                put("user_id", userId)
-                                put("subject_id", subjectId)
-                                put("message", msg)
-                                put("type", "CONTEST_SUBMITTED")
-                            }
-                            db.insert("reminders", null, remValues)
-                        }
-                    }
-                }
-            }
-            db.setTransactionSuccessful()
-        } finally {
-            db.endTransaction()
-        }
+        val resultId = System.currentTimeMillis()
+        val resultMap = mapOf(
+            "id" to resultId,
+            "total" to total,
+            "correct" to correct,
+            "percent" to percent,
+            "submitted_at" to System.currentTimeMillis().toString()
+        )
+        
+        database.child("results").child(userId.toString()).child(subjectId.toString()).setValue(resultMap).await()
+        
+        // Save detailed answers
+        val answersMap = mutableMapOf<String, String>()
+        answers.forEach { (qid, ans) -> answersMap[qid.toString()] = ans }
+        database.child("user_answers").child(userId.toString()).child(subjectId.toString()).setValue(answersMap).await()
+        
         percent
     }
 
-    private fun countRows(tableName: String): Int {
-        return dbHelper.readableDatabase.rawQuery("SELECT COUNT(*) FROM $tableName", null).use { cursor ->
-            if (cursor.moveToFirst()) cursor.getInt(0) else 0
+    suspend fun addQuestions(subjectId: Long, drafts: List<Triple<String, List<String>, String>>): Pair<Int, Boolean> = withContext(Dispatchers.IO) {
+        var count = 0
+        drafts.forEach { (text, opts, cor) ->
+            if (addQuestion(subjectId, text, opts, cor)) count++
         }
+        count to (count > 0)
+    }
+
+    suspend fun deleteSubject(subjectId: Long): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            database.child("subjects").child(subjectId.toString()).removeValue().await()
+            database.child("questions").child(subjectId.toString()).removeValue().await()
+            
+            // Cleanup registrations
+            val regs = database.child("registrations").get().await()
+            regs.children.forEach { userRegs ->
+                if (userRegs.hasChild(subjectId.toString())) {
+                    userRegs.child(subjectId.toString()).ref.removeValue().await()
+                }
+            }
+            
+            // Cleanup results
+            val results = database.child("results").get().await()
+            results.children.forEach { userResults ->
+                if (userResults.hasChild(subjectId.toString())) {
+                    userResults.child(subjectId.toString()).ref.removeValue().await()
+                }
+            }
+
+            true
+        }.getOrDefault(false)
     }
 }
