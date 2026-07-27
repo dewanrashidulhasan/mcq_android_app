@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.mcqapp-mergeDebugResources-37:/values-sw600dp-v13/values-sw600dp-v13.xml",
+            "outputFile": "com.example.mcqapp-mergeDebugResources-41:/values-sw600dp-v13/values-sw600dp-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\PC\\.gradle\\caches\\8.13\\transforms\\b21a2bad24edab3127bdf600c9ee35fb\\transformed\\appcompat-1.7.0\\res\\values-sw600dp-v13\\values-sw600dp-v13.xml",
+                    "source": "C:\\Users\\PC\\.gradle\\caches\\8.13\\transforms\\e4bfdd6489d4d679b12b82d8407db787\\transformed\\appcompat-1.7.0\\res\\values-sw600dp-v13\\values-sw600dp-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
@@ -14,7 +14,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\PC\\.gradle\\caches\\8.13\\transforms\\9adad43c561668efe17792a7935cc5c3\\transformed\\material-1.12.0\\res\\values-sw600dp-v13\\values-sw600dp-v13.xml",
+                    "source": "C:\\Users\\PC\\.gradle\\caches\\8.13\\transforms\\59eee4ebbe0c95de2f929d8008a16080\\transformed\\material-1.12.0\\res\\values-sw600dp-v13\\values-sw600dp-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,10,11,12,13,14",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4",
